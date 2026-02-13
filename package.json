@@ -1,45 +1,24 @@
 {
   "name": "mo5tasar",
   "version": "1.0.0",
-  "description": "مختصر - AI-powered study assistant for Algerian students",
   "private": true,
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
-    "tesseract.js": "^5.0.4",
-    "lucide-react": "^0.263.1",
-    "jspdf": "^2.5.1",
-    "docx": "^8.5.0",
+    "lucide-react": "^0.284.0",
+    "tesseract.js": "^4.1.1",
+    "groq-sdk": "^0.3.3",
     "html-to-image": "^1.11.11",
+    "docx": "^8.2.2",
     "file-saver": "^2.0.5"
-  },
-  "devDependencies": {
-    "tailwindcss": "^3.4.0",
-    "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.32"
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app"
-    ]
+    "build": "react-scripts build"
   },
   "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+    "production": [">0.2%", "not dead", "not op_mini all"],
+    "development": ["last 1 chrome version", "last 1 firefox version", "last 1 safari version"]
   }
 }
