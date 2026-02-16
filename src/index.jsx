@@ -9,7 +9,6 @@ import {
 import Tesseract from 'tesseract.js';
 import { aiService } from './aiService';
 import { exportToPDF, exportToWord, exportToImage } from './exportUtils';
-
 // --- قاعدة بيانات المناهج ---
 const curriculumData = {
   primary: {
