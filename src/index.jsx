@@ -168,10 +168,15 @@ export default function Mo5tasarApp() {
     </div>
   );
 }
-
-// تشغيل التطبيق
+// استبدل الجزء الأخير في الملف بهذا الكود
 const container = document.getElementById('root');
 if (container) {
   const root = createRoot(container);
-  root.render(<Mo5tasarApp />);
+  root.render(
+    <React.StrictMode>
+      <Mo5tasarApp />
+    </React.StrictMode>
+  );
+} else {
+  console.error("Failed to find the root element");
 }
