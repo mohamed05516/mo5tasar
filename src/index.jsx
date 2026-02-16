@@ -1,201 +1,248 @@
 import { createRoot } from 'react-dom/client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Camera, Settings, History, Home, Sparkles, 
-  ChevronDown, Coins, Zap, Sun, Moon, Trash2, 
-  SlidersHorizontal, X, RotateCcw, Copy, Share2, ArrowRight
+  Camera, Upload, Download, ExternalLink, BookOpen, Settings, 
+  History, Home, Sparkles, Zap, Brain, AlertCircle, CheckCircle2, 
+  Coffee, Timer, Droplet, Wind, Trophy, Play, FileText, 
+  Image as ImageIcon, Coins, ChevronDown, Copy, Share2
 } from 'lucide-react';
+import Tesseract from 'tesseract.js';
+import { aiService } from './aiService';
+import { exportToPDF, exportToWord, exportToImage } from './exportUtils';
 
-export default function Mo5tasarCompleteApp() {
-  const [activeTab, setActiveTab] = useState('home');
-  const [mode, setMode] = useState('text');
-  const [isDarkMode, setIsDarkMode] = useState(true);
-  const [points, setPoints] = useState(20);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showResult, setShowResult] = useState(false);
+// --- قاعدة بيانات المناهج ---
+const curriculumData = {
+  primary: {
+    label: 'الابتدائي',
+    years: ['الأولى ابتدائي', 'الثانية ابتدائي', 'الثالثة ابتدائي', 'الرابعة ابتدائي', 'الخامسة ابتدائي'],
+    subjects: ['اللغة العربية', 'الرياضيات', 'التربية الإسلامية', 'اللغة الفرنسية']
+  },
+  middle: {
+    label: 'المتوسط',
+    years: ['الأولى متوسط', 'الثانية متوسط', 'الثالثة متوسط', 'الرابعة متوسط'],
+    subjects: ['الرياضيات', 'الفيزياء', 'العلوم الطبيعية', 'اللغة العربية', 'التاريخ والجغرافيا']
+  },
+  high: {
+    label: 'الثانوي',
+    years: ['الأولى ثانوي', 'الثانية ثانوي', 'الثالثة ثانوي'],
+    subjects: ['الرياضيات', 'الفيزياء', 'العلوم الطبيعية', 'الفلسفة', 'اللغة الإنجليزية', 'الأدب العربي']
+  }
+};
 
-  // إعدادات المنهاج والملخص
+export default function Mo5tasarApp() {
+  const [mode, setMode] = useState('ocr');
   const [level, setLevel] = useState('');
   const [year, setYear] = useState('');
-  const [detail, setDetail] = useState('مختصر');
-  const [style, setStyle] = useState('بسيط وواضح');
+  const [subject, setSubject] = useState('');
+  const [inputText, setInputText] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isDetailed, setIsDetailed] = useState(true);
+  const [showResult, setShowResult] = useState(false);
+  const [summary, setSummary] = useState(null);
+  const [activeTab, setActiveTab] = useState('home');
+  
+  const [points, setPoints] = useState(() => {
+    const saved = localStorage.getItem('mo5tasar_points');
+    return saved ? parseInt(saved) : 100;
+  });
 
-  const theme = {
-    bg: isDarkMode ? 'bg-[#0B0F17]' : 'bg-[#F8FAFC]',
-    card: isDarkMode ? 'bg-[#161B26] border-slate-800' : 'bg-white border-slate-200',
-    text: isDarkMode ? 'text-white' : 'text-slate-900',
-    input: isDarkMode ? 'bg-[#0B0F17] border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'
-  };
+  useEffect(() => {
+    localStorage.setItem('mo5tasar_points', points.toString());
+  }, [points]);
 
-  // دالة محاكاة التلخيص
-  const handleStartSummary = () => {
-    if (points < 5) {
-      alert("نقاطك لا تكفي! شاهد إعلاناً للحصول على المزيد.");
+  const handleSummarize = async () => {
+    if (points < 10) {
+      alert('نقاطك غير كافية! شاهد إعلان لشحن النقاط 🎯');
       return;
     }
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    
+    // التحقق من المدخلات في وضع المنهاج
+    if (mode === 'curriculum' && (!level || !year || !subject)) {
+      alert('يرجى اختيار الطور، السنة، والمادة أولاً');
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const result = await aiService.generateSummary(inputText, { 
+        level: level ? curriculumData[level].label : 'عام', 
+        subject: subject || 'عام',
+        isDetailed 
+      });
+      setSummary(result);
       setShowResult(true);
-      setPoints(prev => prev - 5);
-    }, 2000);
+      setPoints(prev => prev - 10);
+    } catch (error) {
+      alert('حدث خطأ في الاتصال بالذكاء الاصطناعي');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
-    <div className={`min-h-screen ${theme.bg} ${theme.text} pb-32 transition-all duration-300 font-sans text-right`} style={{ direction: 'rtl' }}>
+    <div className="min-h-screen bg-slate-50 pb-24 relative overflow-hidden" style={{ fontFamily: "'Cairo', sans-serif", direction: 'rtl' }}>
+      <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet" />
       
-      {/* 1. Header */}
-      <header className="p-5 flex justify-between items-center sticky top-0 z-50 backdrop-blur-md">
-        <div className="flex items-center gap-3">
-          <div className="bg-amber-500/10 px-4 py-2 rounded-2xl border border-amber-500/20 flex items-center gap-2">
-            <span className="font-bold text-amber-500">{points}</span>
-            <Coins size={18} className="text-amber-500" />
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-white border-b border-emerald-100 p-4 flex justify-between items-center shadow-sm">
+        <div className="flex items-center gap-2">
+          <div className="bg-emerald-500 p-2 rounded-xl shadow-lg shadow-emerald-200">
+            <Sparkles className="text-white w-5 h-5" />
           </div>
-          <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2.5 rounded-xl bg-slate-800/20 border border-slate-700/50 text-yellow-500">
-            {isDarkMode ? <Sun size={20} /> : <Moon size={20} className="text-slate-400" />}
-          </button>
+          <h1 className="text-xl font-black text-slate-800">مختصر</h1>
         </div>
-        <div className="flex items-center gap-2 font-black text-2xl">
-          <h1>مختصر</h1>
-          <div className="bg-emerald-500 p-2 rounded-xl shadow-lg shadow-emerald-500/30">
-            <Sparkles size={20} className="text-white fill-current" />
-          </div>
+        <div className="bg-amber-500 text-white px-3 py-1.5 rounded-xl flex items-center gap-2 font-bold shadow-md shadow-amber-200">
+          <Coins className="w-4 h-4" /> {points}
         </div>
       </header>
 
-      <main className="px-6 max-w-md mx-auto mt-2">
-        
-        {/* --- حالة التحميل --- */}
-        {isLoading && (
-          <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center gap-4">
-            <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-white font-black text-xl animate-pulse">جاري الذكاء الاصطناعي...</p>
-          </div>
-        )}
-
-        {/* --- شاشة النتيجة --- */}
-        {showResult && (
-          <div className="space-y-6 animate-in zoom-in-95 duration-300">
-            <button onClick={() => setShowResult(false)} className="flex items-center gap-2 text-emerald-500 font-bold mb-2">
-              <ArrowRight size={20} /> العودة للتعديل
-            </button>
-            <div className={`${theme.card} rounded-[35px] p-8 border shadow-2xl space-y-6`}>
-              <h2 className="text-xl font-black border-b border-slate-800/20 pb-4">نتائج التلخيص ✨</h2>
-              <div className={`p-5 rounded-2xl text-lg leading-relaxed ${isDarkMode ? 'bg-black/20' : 'bg-slate-50'}`}>
-                {style === 'على شكل نقاط' ? (
-                  <ul className="list-disc list-inside space-y-2">
-                    <li>الفكرة الرئيسية الأولى للدرس.</li>
-                    <li>أهم القوانين المستخلصة.</li>
-                    <li>الخلاصة النهائية والنتائج.</li>
-                  </ul>
-                ) : (
-                  <p>هذا نص تجريبي يوضح كيف سيظهر التلخيص الـ {detail} بأسلوب {style}. يتم الآن معالجة البيانات بناءً على منهاج الـ {level} لتوفير أفضل تجربة تعليمية.</p>
-                )}
-              </div>
-              <div className="flex gap-3">
-                <button onClick={() => alert('تم النسخ')} className="flex-1 bg-emerald-500 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-all">
-                  <Copy size={18} /> نسخ
-                </button>
-                <button className={`flex-1 py-4 rounded-2xl font-bold border flex items-center justify-center gap-2 active:scale-95 transition-all ${theme.card}`}>
-                  <Share2 size={18} /> مشاركة
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* --- الواجهة الرئيسية (تظهر فقط إذا لم تكن هناك نتيجة) --- */}
-        {!showResult && activeTab === 'home' && (
-          <div className="space-y-6 animate-in fade-in">
-            <div className={`p-1.5 rounded-2xl flex gap-2 border ${isDarkMode ? 'bg-slate-800/30 border-slate-800' : 'bg-slate-200 border-transparent'}`}>
-              <button onClick={() => setMode('text')} className={`flex-1 py-3 rounded-xl font-bold transition-all ${mode === 'text' ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-500'}`}>نص حر</button>
-              <button onClick={() => setMode('curriculum')} className={`flex-1 py-3 rounded-xl font-bold transition-all ${mode === 'curriculum' ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-500'}`}>المنهاج</button>
+      <main className="px-4 pt-6 max-w-2xl mx-auto">
+        {!showResult ? (
+          <div className="space-y-6">
+            {/* Mode Switcher */}
+            <div className="bg-white p-1 rounded-2xl shadow-sm border flex gap-1">
+              <button 
+                onClick={() => setMode('ocr')} 
+                className={`flex-1 py-3 rounded-xl font-bold transition-all ${mode === 'ocr' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200' : 'text-slate-500'}`}
+              >
+                نص حر / تصوير
+              </button>
+              <button 
+                onClick={() => setMode('curriculum')} 
+                className={`flex-1 py-3 rounded-xl font-bold transition-all ${mode === 'curriculum' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200' : 'text-slate-500'}`}
+              >
+                المنهاج الدراسي
+              </button>
             </div>
 
-            <div className={`${theme.card} rounded-[35px] p-7 border shadow-2xl`}>
-              {mode === 'text' ? (
-                <textarea className={`w-full h-44 rounded-2xl p-5 outline-none resize-none border text-lg ${theme.input}`} placeholder="الصق درسك هنا..." />
+            <div className="bg-white p-6 rounded-3xl shadow-xl border border-slate-100">
+              {mode === 'ocr' ? (
+                <textarea 
+                  className="w-full h-40 p-4 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-emerald-500 outline-none text-right"
+                  placeholder="اكتب أو الصق الدرس هنا..."
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                />
               ) : (
-                <div className="space-y-4">
-                  <select value={level} onChange={(e)=>setLevel(e.target.value)} className={`w-full p-4 rounded-xl border font-bold outline-none ${theme.input}`}>
-                    <option value="">اختر الطور</option>
-                    <option value="ثانوي">ثانوي</option><option value="متوسط">متوسط</option>
+                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+                  <select 
+                    className="w-full p-4 rounded-2xl border bg-slate-50 font-bold outline-none" 
+                    value={level}
+                    onChange={(e) => { setLevel(e.target.value); setYear(''); setSubject(''); }}
+                  >
+                    <option value="">اختر الطور التعليمي</option>
+                    <option value="primary">الابتدائي</option>
+                    <option value="middle">المتوسط</option>
+                    <option value="high">الثانوي</option>
                   </select>
+
                   {level && (
-                    <select value={year} onChange={(e)=>setYear(e.target.value)} className={`w-full p-4 rounded-xl border font-bold outline-none animate-in slide-in-from-top-2 ${theme.input}`}>
-                      <option value="">اختر السنة</option>
-                      <option>1 ثانوي</option><option>2 ثانوي</option><option>3 ثانوي (بكالوريا)</option>
+                    <select 
+                      className="w-full p-4 rounded-2xl border bg-slate-50 font-bold outline-none animate-in slide-in-from-top-2"
+                      value={year}
+                      onChange={(e) => setYear(e.target.value)}
+                    >
+                      <option value="">اختر السنة الدراسية</option>
+                      {curriculumData[level].years.map(y => <option key={y} value={y}>{y}</option>)}
+                    </select>
+                  )}
+
+                  {year && (
+                    <select 
+                      className="w-full p-4 rounded-2xl border bg-slate-50 font-bold outline-none animate-in slide-in-from-top-2"
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
+                    >
+                      <option value="">اختر المادة</option>
+                      {curriculumData[level].subjects.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   )}
                 </div>
               )}
-              <button onClick={handleStartSummary} className="w-full mt-8 bg-emerald-500 text-white py-5 rounded-[22px] font-black text-xl shadow-xl shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-3">
-                ابدأ التلخيص <Sparkles size={24} />
+
+              {/* Detail Level Toggle */}
+              <div className="flex items-center justify-between mt-6 bg-slate-50 p-3 rounded-2xl">
+                <span className="font-bold text-slate-600 text-sm">نوع التلخيص:</span>
+                <button 
+                  onClick={() => setIsDetailed(!isDetailed)}
+                  className={`px-4 py-1.5 rounded-xl font-bold text-xs transition-all ${isDetailed ? 'bg-emerald-100 text-emerald-600 border border-emerald-200' : 'bg-amber-100 text-amber-600 border border-amber-200'}`}
+                >
+                  {isDetailed ? 'مفصل شامل' : 'موجز سريع'}
+                </button>
+              </div>
+
+              <button 
+                onClick={handleSummarize}
+                disabled={isProcessing || !inputText && mode === 'ocr'}
+                className="w-full mt-4 bg-emerald-500 text-white py-4 rounded-2xl font-black shadow-lg shadow-emerald-200 active:scale-95 transition-all disabled:opacity-50"
+              >
+                {isProcessing ? 'جاري التحليل والتلخيص...' : 'ابدأ التلخيص الآن ✨'}
               </button>
             </div>
-
-            <button className="w-full bg-[#E67E22] text-white py-5 rounded-[24px] font-black text-xl shadow-lg transition-all flex items-center justify-center gap-3 active:scale-95">
-              <Camera size={26} /> مسح النص بالكاميرا
-            </button>
-
-            <button onClick={() => setPoints(p => p + 10)} className={`${theme.card} p-5 rounded-[24px] border flex items-center justify-between`}>
-              <div className="bg-amber-500 text-white text-[10px] font-black px-2 py-1 rounded-lg">+10 نقاط</div>
-              <p className="font-bold text-sm">شاهد إعلان لزيادة النقاط</p>
-              <Zap size={18} className="text-amber-500 fill-amber-500" />
-            </button>
           </div>
-        )}
-
-        {/* شاشة السجل */}
-        {activeTab === 'history' && !showResult && (
-          <div className="space-y-4 animate-in slide-in-from-left-4">
-            <h2 className="text-xl font-black mb-4 pr-2">آخر التلخيصات</h2>
-            {[1, 2].map(i => (
-              <div key={i} className={`${theme.card} p-5 rounded-2xl border flex justify-between items-center shadow-sm`}>
-                <Trash2 size={18} className="text-red-500 opacity-30" />
-                <div className="text-right">
-                  <p className="font-bold">ملخص درس العلوم #{i}</p>
-                  <p className="text-xs opacity-50">14 فيفري 2026</p>
+        ) : (
+          <div className="space-y-4 animate-in fade-in text-right pb-10">
+            <div className="bg-white p-6 rounded-3xl shadow-xl border border-emerald-100">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-emerald-600 font-black flex items-center gap-2">
+                  <div className="w-1.5 h-6 bg-emerald-500 rounded-full" /> ملخص {subject || 'الدرس'}
+                </h3>
+                <div className="flex gap-2">
+                  <button onClick={() => exportToPDF("ملخص مختصر", summary?.details)} className="p-2 bg-slate-50 rounded-lg text-slate-500"><Download size={20}/></button>
+                  <button onClick={() => navigator.clipboard.writeText(summary?.details)} className="p-2 bg-slate-50 rounded-lg text-slate-500"><Copy size={20}/></button>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
 
-        {/* شاشة الإعدادات */}
-        {activeTab === 'settings' && !showResult && (
-          <div className="space-y-6 animate-in slide-in-from-right-4">
-            <div className={`${theme.card} p-7 rounded-[30px] border shadow-2xl space-y-8`}>
-              <h2 className="text-xl font-black text-emerald-500 flex items-center gap-2 border-b pb-4"><Settings /> الإعدادات</h2>
-              <div className="flex justify-between items-center">
-                <select value={detail} onChange={(e)=>setDetail(e.target.value)} className={`p-2 rounded-lg border font-bold ${theme.input}`}>
-                  <option>مختصر</option><option>تفصيلي</option>
-                </select>
-                <span className="font-bold">درجة الاختصار</span>
+              <div className="space-y-6">
+                <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100">
+                  <h4 className="font-bold text-emerald-700 mb-2 underline">الفكرة الرئيسية:</h4>
+                  <p className="text-slate-700 leading-relaxed font-bold">{summary?.mainIdea}</p>
+                </div>
+
+                <div>
+                  <h4 className="font-bold text-slate-800 mb-2">التفاصيل:</h4>
+                  <p className="text-slate-600 leading-relaxed whitespace-pre-line">{summary?.details}</p>
+                </div>
+
+                {summary?.terms && (
+                  <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-100">
+                    <h4 className="font-bold text-amber-700 mb-2">مصطلحات هامة:</h4>
+                    <p className="text-slate-600 text-sm italic">{summary?.terms}</p>
+                  </div>
+                )}
               </div>
-              <div className="flex justify-between items-center">
-                <select value={style} onChange={(e)=>setStyle(e.target.value)} className={`p-2 rounded-lg border font-bold ${theme.input}`}>
-                  <option>بسيط وواضح</option><option>على شكل نقاط</option>
-                </select>
-                <span className="font-bold">أسلوب اللغة</span>
-              </div>
+              
+              <button
+                onClick={() => { setShowResult(false); setSummary(null); }}
+                className="w-full mt-8 bg-slate-800 text-white font-bold py-4 rounded-2xl hover:bg-slate-700 transition-all flex items-center justify-center gap-2"
+              >
+                تلخيص درس آخر
+              </button>
             </div>
           </div>
         )}
       </main>
 
-      {/* Navigation */}
-      <nav className={`fixed bottom-6 left-6 right-6 ${theme.card} h-22 rounded-[30px] shadow-2xl flex justify-around items-center px-4 border z-50`}>
-        {[
-          { id: 'settings', icon: <Settings />, label: 'الإعدادات' },
-          { id: 'home', icon: <Home />, label: 'الرئيسية' },
-          { id: 'history', icon: <History />, label: 'السجل' }
-        ].map((item) => (
-          <button key={item.id} onClick={() => {setActiveTab(item.id); setShowResult(false)}} className={`flex-1 flex flex-col items-center gap-1.5 transition-all ${activeTab === item.id ? 'text-emerald-500 scale-110' : 'text-slate-500'}`}>
-            <div className={`p-2.5 rounded-2xl ${activeTab === item.id ? 'bg-emerald-500/10' : ''}`}>{item.icon}</div>
-            <span className="text-[10px] font-black">{item.label}</span>
-          </button>
-        ))}
+      {/* Bottom Nav */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-4 py-3 z-50 shadow-2xl">
+        <div className="max-w-2xl mx-auto flex items-center justify-around">
+          {[
+            { icon: <History className="w-6 h-6" />, label: 'السجل', id: 'history' },
+            { icon: <Home className="w-6 h-6" />, label: 'الرئيسية', id: 'home' },
+            { icon: <Settings className="w-6 h-6" />, label: 'الإعدادات', id: 'settings' },
+          ].map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`flex flex-col items-center gap-1 px-6 py-1 rounded-2xl transition-all ${
+                activeTab === item.id ? 'text-emerald-600' : 'text-slate-400'
+              }`}
+            >
+              {item.icon}
+              <span className="text-[10px] font-bold">{item.label}</span>
+            </button>
+          ))}
+        </div>
       </nav>
     </div>
   );
@@ -204,5 +251,5 @@ export default function Mo5tasarCompleteApp() {
 const container = document.getElementById('root');
 if (container) {
   const root = createRoot(container);
-  root.render(<Mo5tasarCompleteApp />);
+  root.render(<Mo5tasarApp />);
 }
