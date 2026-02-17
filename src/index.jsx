@@ -4,8 +4,10 @@ import {
   Sparkles, Coins, Home, History, Settings, Download, Copy, 
   BookOpen, ChevronDown, CheckCircle2 
 } from 'lucide-react';
+// استيراد الخدمة الحقيقية
+import { aiService } from './aiService'; 
+import { exportToPDF } from './exportUtils';
 
-// --- قاعدة بيانات المناهج (مدمجة هنا لمنع أخطاء الاستيراد) ---
 const curriculumData = {
   primary: {
     label: 'الابتدائي',
@@ -25,42 +27,54 @@ const curriculumData = {
 };
 
 export default function Mo5tasarApp() {
-  const [mode, setMode] = useState('ocr'); // ocr or curriculum
+  const [mode, setMode] = useState('ocr');
   const [level, setLevel] = useState('');
   const [year, setYear] = useState('');
   const [subject, setSubject] = useState('');
   const [inputText, setInputText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showResult, setShowResult] = useState(false);
-  const [resultText, setResultText] = useState('');
+  const [summary, setSummary] = useState(null);
   const [points, setPoints] = useState(100);
 
-  // دالة وهمية للمحاكاة (لضمان عمل التطبيق بدون API Key مؤقتاً)
-  const handleSummarize = () => {
-    // التحقق من المدخلات
+  const handleSummarize = async () => {
+    // التأكد من المدخلات
     if (mode === 'curriculum' && (!level || !year || !subject)) {
       alert("يرجى اختيار الطور، السنة، والمادة.");
+      return;
+    }
+    if (mode === 'ocr' && !inputText) {
+      alert("يرجى كتابة نص أو لصق درس.");
       return;
     }
     
     setIsProcessing(true);
     
-    // محاكاة تأخير الذكاء الاصطناعي
-    setTimeout(() => {
-      setResultText(`هذا ملخص تجريبي لمادة ${subject || 'عام'} (${year || ''}). \n\nالفكرة الرئيسية: يعتمد هذا الدرس على فهم الأساسيات.\n\nالتفاصيل:\n1. النقطة الأولى مهمة جداً.\n2. النقطة الثانية تشرح المفهوم.\n3. الخاتمة توضح النتائج.`);
+    try {
+      // مناداة الذكاء الاصطناعي فعلياً
+      const result = await aiService.generateSummary(inputText || `درس ${subject} لعام ${year}`, { 
+        level: level ? curriculumData[level].label : 'عام', 
+        subject: subject || 'عام',
+        isDetailed: true 
+      });
+      
+      setSummary(result);
       setShowResult(true);
-      setIsProcessing(false);
       setPoints(prev => prev - 10);
-    }, 2000);
+    } catch (error) {
+      console.error(error);
+      alert("فشل التلخيص! تأكد من وضع API Key في Vercel.");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-[#0f172a] text-white p-4 font-sans" dir="rtl">
-      {/* Header */}
-      <header className="flex justify-between items-center mb-8 bg-[#1e293b] p-4 rounded-2xl border border-slate-700">
+      <header className="flex justify-between items-center mb-8 bg-[#1e293b] p-4 rounded-2xl border border-slate-700 shadow-lg">
         <div className="flex items-center gap-2">
-          <Sparkles className="text-emerald-400" />
-          <h1 className="text-xl font-bold">مختصر</h1>
+          <Sparkles className="text-emerald-400 animate-pulse" />
+          <h1 className="text-xl font-bold tracking-tight">مختصر <span className="text-[10px] bg-emerald-500/20 px-2 py-0.5 rounded text-emerald-400">ذكاء اصطناعي</span></h1>
         </div>
         <div className="bg-amber-500/10 text-amber-500 px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1 border border-amber-500/20">
           <Coins size={14} /> {points}
@@ -68,115 +82,66 @@ export default function Mo5tasarApp() {
       </header>
 
       <main className="max-w-md mx-auto space-y-6">
-        {/* Toggle Buttons */}
         <div className="flex bg-[#1e293b] p-1.5 rounded-xl border border-slate-700">
-          <button 
-            onClick={() => setMode('ocr')} 
-            className={`flex-1 py-2.5 rounded-lg font-bold text-sm transition-all ${mode === 'ocr' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
-          >
-            نص حر
-          </button>
-          <button 
-            onClick={() => setMode('curriculum')} 
-            className={`flex-1 py-2.5 rounded-lg font-bold text-sm transition-all ${mode === 'curriculum' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
-          >
-            المنهاج
-          </button>
+          <button onClick={() => setMode('ocr')} className={`flex-1 py-2.5 rounded-lg font-bold text-sm transition-all ${mode === 'ocr' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>نص حر</button>
+          <button onClick={() => setMode('curriculum')} className={`flex-1 py-2.5 rounded-lg font-bold text-sm transition-all ${mode === 'curriculum' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>المنهاج</button>
         </div>
 
         {!showResult ? (
           <div className="bg-[#1e293b] p-5 rounded-3xl border border-slate-700 shadow-xl">
             {mode === 'curriculum' ? (
               <div className="space-y-4">
-                {/* 1. Level Select */}
-                <div className="space-y-2">
-                  <label className="text-xs text-slate-400 font-bold mr-1">الطور الدراسي</label>
-                  <div className="relative">
-                    <select 
-                      className="w-full p-4 bg-[#0f172a] rounded-xl border border-slate-700 outline-none appearance-none font-bold text-slate-300 focus:border-emerald-500 transition-colors"
-                      value={level}
-                      onChange={(e) => { setLevel(e.target.value); setYear(''); setSubject(''); }}
-                    >
-                      <option value="">اختر الطور...</option>
-                      <option value="primary">الابتدائي</option>
-                      <option value="middle">المتوسط</option>
-                      <option value="high">الثانوي</option>
-                    </select>
-                    <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={20} />
-                  </div>
-                </div>
+                <select className="w-full p-4 bg-[#0f172a] rounded-xl border border-slate-700 outline-none font-bold text-slate-300" value={level} onChange={(e) => { setLevel(e.target.value); setYear(''); setSubject(''); }}>
+                  <option value="">اختر الطور...</option>
+                  <option value="primary">الابتدائي</option>
+                  <option value="middle">المتوسط</option>
+                  <option value="high">الثانوي</option>
+                </select>
 
-                {/* 2. Year Select (Dynamic) */}
                 {level && (
-                  <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                    <label className="text-xs text-slate-400 font-bold mr-1">السنة الدراسية</label>
-                    <div className="relative">
-                      <select 
-                        className="w-full p-4 bg-[#0f172a] rounded-xl border border-slate-700 outline-none appearance-none font-bold text-slate-300 focus:border-emerald-500 transition-colors"
-                        value={year}
-                        onChange={(e) => setYear(e.target.value)}
-                      >
-                        <option value="">اختر السنة...</option>
-                        {curriculumData[level].years.map(y => <option key={y} value={y}>{y}</option>)}
-                      </select>
-                      <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={20} />
-                    </div>
-                  </div>
+                  <select className="w-full p-4 bg-[#0f172a] rounded-xl border border-slate-700 outline-none font-bold text-slate-300 animate-in fade-in" value={year} onChange={(e) => setYear(e.target.value)}>
+                    <option value="">اختر السنة...</option>
+                    {curriculumData[level].years.map(y => <option key={y} value={y}>{y}</option>)}
+                  </select>
                 )}
 
-                {/* 3. Subject Select (Dynamic) */}
                 {year && (
-                  <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                    <label className="text-xs text-slate-400 font-bold mr-1">المادة</label>
-                    <div className="relative">
-                      <select 
-                        className="w-full p-4 bg-[#0f172a] rounded-xl border border-slate-700 outline-none appearance-none font-bold text-slate-300 focus:border-emerald-500 transition-colors"
-                        value={subject}
-                        onChange={(e) => setSubject(e.target.value)}
-                      >
-                        <option value="">اختر المادة...</option>
-                        {curriculumData[level].subjects.map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
-                      <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={20} />
-                    </div>
-                  </div>
+                  <select className="w-full p-4 bg-[#0f172a] rounded-xl border border-slate-700 outline-none font-bold text-slate-300 animate-in fade-in" value={subject} onChange={(e) => setSubject(e.target.value)}>
+                    <option value="">اختر المادة...</option>
+                    {curriculumData[level].subjects.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
                 )}
               </div>
             ) : (
-              <textarea 
-                className="w-full h-40 bg-[#0f172a] border border-slate-700 rounded-xl p-4 outline-none resize-none focus:border-emerald-500 transition-colors"
-                placeholder="الصق نص الدرس هنا..."
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-              />
+              <textarea className="w-full h-40 bg-[#0f172a] border border-slate-700 rounded-xl p-4 outline-none resize-none focus:border-emerald-500 transition-colors" placeholder="الصق نص الدرس هنا..." value={inputText} onChange={(e) => setInputText(e.target.value)} />
             )}
 
-            <button 
-              onClick={handleSummarize}
-              disabled={isProcessing}
-              className="w-full mt-6 bg-emerald-500 hover:bg-emerald-400 text-white py-4 rounded-xl font-black text-lg shadow-lg shadow-emerald-500/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
-            >
-              {isProcessing ? 'جاري التحليل...' : 'ابدأ التلخيص ✨'}
+            <button onClick={handleSummarize} disabled={isProcessing} className="w-full mt-6 bg-emerald-500 hover:bg-emerald-400 text-white py-4 rounded-xl font-black text-lg shadow-lg shadow-emerald-500/20 transition-all active:scale-95 disabled:opacity-50">
+              {isProcessing ? 'جاري التلخيص بالذكاء الاصطناعي...' : 'ابدأ التلخيص الآن ✨'}
             </button>
           </div>
         ) : (
           <div className="bg-[#1e293b] p-6 rounded-3xl border border-emerald-500/30 shadow-2xl animate-in zoom-in-95">
-            <div className="flex justify-between items-center mb-4 border-b border-slate-700 pb-4">
-              <h3 className="text-emerald-400 font-bold flex items-center gap-2"><CheckCircle2 size={18}/> النتيجة</h3>
-              <div className="flex gap-2">
-                 <button className="p-2 bg-slate-800 rounded-lg text-slate-400 hover:text-white"><Copy size={18}/></button>
-                 <button className="p-2 bg-slate-800 rounded-lg text-slate-400 hover:text-white"><Download size={18}/></button>
-              </div>
-            </div>
-            <p className="text-slate-300 leading-relaxed whitespace-pre-line mb-6">
-              {resultText}
-            </p>
-            <button 
-              onClick={() => setShowResult(false)}
-              className="w-full py-3 bg-slate-800 rounded-xl font-bold text-slate-300 hover:bg-slate-700 transition-colors"
-            >
-              تلخيص جديد
-            </button>
+             <div className="space-y-6">
+                <div className="bg-emerald-500/10 p-4 rounded-2xl border border-emerald-500/20">
+                  <h4 className="font-bold text-emerald-400 mb-2 underline text-sm">الفكرة الرئيسية:</h4>
+                  <p className="text-white leading-relaxed">{summary?.mainIdea}</p>
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-400 mb-2 text-sm">التفاصيل:</h4>
+                  <p className="text-slate-200 leading-relaxed whitespace-pre-line text-sm">{summary?.details}</p>
+                </div>
+                {summary?.terms && (
+                  <div className="bg-amber-500/10 p-4 rounded-2xl border border-amber-500/20">
+                    <h4 className="font-bold text-amber-500 mb-2 text-sm text-right">مصطلحات:</h4>
+                    <p className="text-slate-300 text-xs">{summary?.terms}</p>
+                  </div>
+                )}
+                <div className="flex gap-2">
+                   <button onClick={() => exportToPDF("ملخص مختصر", summary?.details)} className="flex-1 py-3 bg-slate-800 rounded-xl font-bold text-xs flex justify-center items-center gap-2"><Download size={14}/> PDF</button>
+                   <button onClick={() => setShowResult(false)} className="flex-[2] py-3 bg-emerald-600 rounded-xl font-bold text-xs">تلخيص جديد</button>
+                </div>
+             </div>
           </div>
         )}
       </main>
@@ -184,7 +149,6 @@ export default function Mo5tasarApp() {
   );
 }
 
-// Render Logic
 const container = document.getElementById('root');
 if (container) {
   const root = createRoot(container);
