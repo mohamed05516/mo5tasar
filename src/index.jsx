@@ -138,7 +138,7 @@ export default function Mo5tasarApp() {
           <span className="font-black text-xl tracking-tight">مختصر</span>
         </div>
         <div className="bg-amber-500/10 text-amber-500 px-3 py-1 rounded-full text-xs font-bold border border-amber-500/20 flex items-center gap-1">
-          <Coins size={14} /> 100
+          <Coins size={14} /> 20
         </div>
       </header>
 
@@ -156,7 +156,7 @@ export default function Mo5tasarApp() {
                 <div className="relative">
                   <textarea 
                     className="w-full h-44 bg-[#0b0f1a] rounded-2xl p-4 border border-slate-800 outline-none focus:border-emerald-500 transition-all resize-none text-sm leading-relaxed"
-                    placeholder="ضع نص الدرس هنا.. حتى لو كان خطك سيئاً، سنفهمه!"
+                    placeholder="قم باختيار مستواك اولا ثم اكتب درسك هنا او صوره"
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                   />
