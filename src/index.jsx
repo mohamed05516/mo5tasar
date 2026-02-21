@@ -182,33 +182,37 @@ export default function Mo5tasarApp() {
       </header>
 
       <main className="p-4 max-w-md mx-auto">
-        {/* الصفحة الرئيسية */}
+{/* الصفحة الرئيسية */}
         {activeTab === 'home' && (
           <div className="space-y-5 animate-in fade-in duration-500">
+            
+            {/* 1. شريط الاختيارات العلوي (نظيف ومرتب) */}
             <div className="flex bg-[#161b2c] p-1 rounded-2xl border border-slate-800">
               <button 
-   onClick={handleSummarize} 
-   disabled={isProcessing || gems < 10} 
-   className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 py-4 rounded-2xl font-black text-lg shadow-xl shadow-blue-900/40 active:scale-95 transition-all flex items-center justify-center gap-2 border border-white/10"
->
-  {isProcessing ? (
-    <span className="flex items-center gap-2">جاري التحليل... ✨</span>
-  ) : (
-    <>ابدأ التلخيص <Sparkles size={20} className="fill-white/20" /></>
-  )}
-</button>
-              <button onClick={() => setMode('curriculum')} className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${mode === 'curriculum' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500'}`}>المنهاج</button>
+                onClick={() => setMode('ocr')} 
+                className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${mode === 'ocr' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500'}`}
+              >
+                نص / كاميرا
+              </button>
+              <button 
+                onClick={() => setMode('curriculum')} 
+                className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${mode === 'curriculum' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500'}`}
+              >
+                المنهاج
+              </button>
             </div>
 
+            {/* 2. صندوق العمليات الكبير */}
             <div className="bg-[#161b2c] p-6 rounded-[2.5rem] border border-slate-800 shadow-2xl space-y-4">
+              
               {mode === 'ocr' ? (
                 <div className="relative">
-              <textarea 
-  className="w-full h-44 bg-[#020617]/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 outline-none focus:border-blue-500/50 transition-all resize-none text-sm leading-relaxed text-blue-50 placeholder:text-slate-600 shadow-inner"
-  placeholder="حط درسك هنا أو استعمل الكاميرا..."
-  value={inputText}
-  onChange={(e) => setInputText(e.target.value)}
-/>
+                  <textarea 
+                    className="w-full h-44 bg-[#020617]/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 outline-none focus:border-blue-500/50 transition-all resize-none text-sm leading-relaxed text-blue-50 placeholder:text-slate-600 shadow-inner"
+                    placeholder="حط درسك هنا أو استعمل الكاميرا..."
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                  />
                   <button onClick={handleCameraClick} className="absolute bottom-4 left-4 p-3 bg-emerald-600 rounded-xl shadow-xl hover:bg-emerald-500 transition-all">
                     <Camera size={20} />
                   </button>
@@ -237,13 +241,22 @@ export default function Mo5tasarApp() {
                 </div>
               )}
 
-              <button onClick={handleSummarize} disabled={isProcessing} className="w-full bg-emerald-600 hover:bg-emerald-500 py-4 rounded-2xl font-black text-lg shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
-                {isProcessing ? 'جاري التحليل الذكي...' : 'ابدأ التلخيص ✨'}
+              {/* 3. الزر الأزرق في مكانه الصحيح (أسفل المحتوى) */}
+              <button 
+                onClick={handleSummarize} 
+                disabled={isProcessing || gems < 10} 
+                className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 py-4 rounded-2xl font-black text-lg shadow-xl shadow-blue-900/40 active:scale-95 transition-all flex items-center justify-center gap-2 border border-white/10"
+              >
+                {isProcessing ? (
+                  <span className="flex items-center gap-2">جاري التحليل... ✨</span>
+                ) : (
+                  <>ابدأ التلخيص <Sparkles size={20} className="fill-white/20" /></>
+                )}
               </button>
+
             </div>
           </div>
         )}
-
         {/* السجل */}
         {activeTab === 'history' && (
           <div className="space-y-4 animate-in slide-in-from-left-4">
