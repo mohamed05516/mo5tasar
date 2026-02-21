@@ -149,18 +149,19 @@ const showNotification = (msg) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0f1a] text-white font-sans pb-24 transition-all" dir="rtl">
+  <div className="min-h-screen bg-[#020617] bg-gradient-to-b from-[#020617] via-[#0f172a] to-[#020617] text-slate-100 font-sans pb-24 transition-all duration-700" dir="rtl">
       {/* Header */}
-      <header className="p-4 flex justify-between items-center bg-[#161b2c] border-b border-slate-800 sticky top-0 z-50">
+    <header className="p-4 flex justify-between items-center bg-[#0f172a]/60 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50">
         <div className="flex items-center gap-2">
           <div className="bg-emerald-500 p-1.5 rounded-lg shadow-lg shadow-emerald-500/20">
             <Sparkles size={18} className="text-white" />
           </div>
           <span className="font-black text-xl tracking-tight">مختصر</span>
         </div>
-       <div className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-full shadow-sm shadow-blue-900/10">
-  <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-  <span className="text-blue-400 font-black text-xs">{gems} جوهرة 💎</span>
+     <div className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-full relative group">
+  <div className="w-2 h-2 bg-blue-400 rounded-full animate-ping absolute opacity-75"></div>
+  <div className="w-2 h-2 bg-blue-500 rounded-full relative"></div>
+  <span className="text-blue-400 font-black text-xs tracking-tight">{gems} جوهرة 💎</span>
 </div>
       </header>
 
@@ -169,19 +170,29 @@ const showNotification = (msg) => {
         {activeTab === 'home' && (
           <div className="space-y-5 animate-in fade-in duration-500">
             <div className="flex bg-[#161b2c] p-1 rounded-2xl border border-slate-800">
-              <button onClick={() => setMode('ocr')} className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${mode === 'ocr' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500'}`}>نص / كاميرا</button>
+              <button 
+  onClick={handleSummarize} 
+  disabled={isProcessing || gems < 10} 
+  className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 py-4 rounded-2xl font-black text-lg shadow-xl shadow-blue-900/40 active:scale-95 transition-all flex items-center justify-center gap-2 border border-white/10"
+>
+  {isProcessing ? (
+    <span className="flex items-center gap-2">جاري التحليل... ✨</span>
+  ) : (
+    <>ابدأ التلخيص <Sparkles size={20} className="fill-white/20" /></>
+  )}
+</button>
               <button onClick={() => setMode('curriculum')} className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${mode === 'curriculum' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500'}`}>المنهاج</button>
             </div>
 
             <div className="bg-[#161b2c] p-6 rounded-[2.5rem] border border-slate-800 shadow-2xl space-y-4">
               {mode === 'ocr' ? (
                 <div className="relative">
-                  <textarea 
-                    className="w-full h-44 bg-[#0b0f1a] rounded-2xl p-4 border border-slate-800 outline-none focus:border-emerald-500 transition-all resize-none text-sm leading-relaxed"
-                    placeholder="قم باختيار مستواك اولا ثم اكتب درسك هنا او صوره"
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
-                  />
+              <textarea 
+  className="w-full h-44 bg-[#020617]/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 outline-none focus:border-blue-500/50 transition-all resize-none text-sm leading-relaxed text-blue-50 placeholder:text-slate-600 shadow-inner"
+  placeholder="حط درسك هنا أو استعمل الكاميرا..."
+  value={inputText}
+  onChange={(e) => setInputText(e.target.value)}
+/>
                   <button onClick={handleCameraClick} className="absolute bottom-4 left-4 p-3 bg-emerald-600 rounded-xl shadow-xl hover:bg-emerald-500 transition-all">
                     <Camera size={20} />
                   </button>
@@ -323,7 +334,19 @@ const showNotification = (msg) => {
       </main>
 
       {/* Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-[#161b2c]/90 backdrop-blur-xl border-t border-slate-800 p-4 flex justify-around items-center z-50">
+    <nav className="fixed bottom-6 left-4 right-4 bg-[#0f172a]/80 backdrop-blur-2xl border border-white/10 p-2 rounded-[2rem] flex justify-around items-center shadow-2xl z-50">
+  <button onClick={() => setActiveTab('history')} className={`p-4 rounded-2xl transition-all duration-300 ${activeTab === 'history' ? 'bg-blue-500/20 text-blue-400' : 'text-slate-500 hover:text-slate-300'}`}>
+    <History size={24} />
+  </button>
+  
+  <button onClick={() => setActiveTab('home')} className={`p-4 rounded-2xl transition-all duration-500 ${activeTab === 'home' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/40 -translate-y-2' : 'bg-slate-800 text-slate-400'}`}>
+    <Home size={24} />
+  </button>
+
+  <button onClick={() => setActiveTab('settings')} className={`p-4 rounded-2xl transition-all duration-300 ${activeTab === 'settings' ? 'bg-blue-500/20 text-blue-400' : 'text-slate-500 hover:text-slate-300'}`}>
+    <Settings size={24} />
+  </button>
+</nav>
         <button onClick={() => setActiveTab('history')} className={`flex flex-col items-center gap-1.5 transition-all ${activeTab === 'history' ? 'text-emerald-500 scale-110' : 'text-slate-500'}`}>
           <History size={22} /><span className="text-[9px] font-bold">السجل</span>
         </button>
