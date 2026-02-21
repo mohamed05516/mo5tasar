@@ -80,6 +80,12 @@ export default function Mo5tasarApp() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [summary, setSummary] = useState(null);
   const [history, setHistory] = useState([]);
+  const [toast, setToast] = useState({ show: false, message: '' });
+// دالة مساعدة لإظهار التنبيه وإخفائه تلقائياً
+const showNotification = (msg) => {
+  setToast({ show: true, message: msg });
+  setTimeout(() => setToast({ show: false, message: '' }), 5000); // يختفي بعد 3 ثواني
+};
   // --- إضافة نظام الجواهر (نضيفها هنا مع بقية الـ useState) ---
   const [gems, setGems] = useState(() => {
     const saved = localStorage.getItem('mo5tasar_gems');
@@ -94,7 +100,7 @@ export default function Mo5tasarApp() {
     setTimeout(() => {
       setGems(prev => prev + 30); // مكافأة 30 جوهرة
       setIsWatchingAd(false);
-      alert("suiiii! أضفنا 30 جوهرة لرصيدك.. واصل تألقك! 💎✨");
+      showNotification("suiiii! أضفنا 30 جوهرة لرصيدك.. واصل تألقك! 💎✨");
     }, 7000); // ينتظر 7 ثوانٍ
   };
   const fileInputRef = useRef(null);
@@ -111,16 +117,16 @@ export default function Mo5tasarApp() {
       const { data: { text } } = await Tesseract.recognize(file, 'ara+fra');
       setInputText(text);
     } catch (err) {
-      alert("تعذر قراءة الصورة، جرب صورة أوضح");
+      showNotification("تعذر قراءة الصورة، جرب صورة أوضح");
     } finally {
       setIsProcessing(false);
     }
   };
 
   const handleSummarize = async () => {
-    if (mode === 'curriculum' && (!level || !year || !subject)) return alert("يرجى إكمال اختيار المنهاج");
-    if (mode === 'ocr' && !inputText) return alert("يرجى كتابة نص أو التقاط صورة");
-    if (gems < 10) return alert("رصيدك من الجواهر خلص! 💎 اشحن رصيدك من الإعدادات.");
+    if (mode === 'curriculum' && (!level || !year || !subject)) return showNotification("يرجى إكمال اختيار المنهاج");
+    if (mode === 'ocr' && !inputText) return showNotification("يرجى كتابة نص أو التقاط صورة");
+    if (gems < 10) return showNotification("رصيدك من الجواهر خلص! 💎 اشحن رصيدك من الإعدادات.");
     setIsProcessing(true);
     try {
       const result = await generateAISummary(
@@ -136,7 +142,7 @@ export default function Mo5tasarApp() {
       localStorage.setItem('mo5tasar_history', JSON.stringify(newHistory.slice(0, 10)));
       setActiveTab('result');
     } catch (e) {
-      alert("خطأ! تأكد من مفتاح API في Vercel");
+      showNotification("خطأ! تأكد من مفتاح API في Vercel");
     } finally {
       setIsProcessing(false);
     }
@@ -328,10 +334,20 @@ export default function Mo5tasarApp() {
           <Settings size={22} /><span className="text-[9px] font-bold">الإعدادات</span>
         </button>
       </nav>
+      {/* نظام التنبيهات الداخلي */}
+{toast.show && (
+  <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-top duration-300">
+    <div className="bg-blue-600 text-white px-6 py-3 rounded-2xl shadow-2xl shadow-blue-900/40 border border-white/20 flex items-center gap-3">
+      <div className="bg-white/20 p-1 rounded-full">
+        <Sparkles size={16} />
+      </div>
+      <p className="text-sm font-bold whitespace-nowrap">{toast.message}</p>
+    </div>
+  </div>
+)}
     </div>
   );
 }
-
 const container = document.getElementById('root');
 if (container) {
   const root = createRoot(container);
