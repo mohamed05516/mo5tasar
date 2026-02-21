@@ -80,15 +80,29 @@ export default function Mo5tasarApp() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [summary, setSummary] = useState(null);
   const [history, setHistory] = useState([]);
+  // --- إضافة نظام الجواهر (نضيفها هنا مع بقية الـ useState) ---
+  const [gems, setGems] = useState(() => {
+    const saved = localStorage.getItem('mo5tasar_gems');
+    return saved !== null ? parseInt(saved) : 100; // يبدأ بـ 100 جوهرة
+  });
+  useEffect(() => {
+    localStorage.setItem('mo5tasar_gems', gems.toString());
+  }, [gems]);
+  const [isWatchingAd, setIsWatchingAd] = useState(false);
+  const handleWatchAd = () => {
+    setIsWatchingAd(true);
+    setTimeout(() => {
+      setGems(prev => prev + 30); // مكافأة 30 جوهرة
+      setIsWatchingAd(false);
+      alert("suiiii! أضفنا 30 جوهرة لرصيدك.. واصل تألقك! 💎✨");
+    }, 7000); // ينتظر 7 ثوانٍ
+  };
   const fileInputRef = useRef(null);
-
   useEffect(() => {
     const saved = localStorage.getItem('mo5tasar_history');
     if (saved) setHistory(JSON.parse(saved));
   }, []);
-
   const handleCameraClick = () => fileInputRef.current.click();
-
   const processImage = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -106,7 +120,7 @@ export default function Mo5tasarApp() {
   const handleSummarize = async () => {
     if (mode === 'curriculum' && (!level || !year || !subject)) return alert("يرجى إكمال اختيار المنهاج");
     if (mode === 'ocr' && !inputText) return alert("يرجى كتابة نص أو التقاط صورة");
-
+    if (gems < 10) return alert("رصيدك من الجواهر خلص! 💎 اشحن رصيدك من الإعدادات.");
     setIsProcessing(true);
     try {
       const result = await generateAISummary(
@@ -116,6 +130,7 @@ export default function Mo5tasarApp() {
         isDetailed
       );
       setSummary(result);
+      setGems(prev => prev - 10);
       const newHistory = [{ ...result, subject: subject || 'نص حر', date: new Date().toLocaleString('ar-DZ') }, ...history];
       setHistory(newHistory.slice(0, 10)); // حفظ آخر 10 عمليات
       localStorage.setItem('mo5tasar_history', JSON.stringify(newHistory.slice(0, 10)));
@@ -137,9 +152,10 @@ export default function Mo5tasarApp() {
           </div>
           <span className="font-black text-xl tracking-tight">مختصر</span>
         </div>
-        <div className="bg-amber-500/10 text-amber-500 px-3 py-1 rounded-full text-xs font-bold border border-amber-500/20 flex items-center gap-1">
-          <Coins size={14} /> 20
-        </div>
+       <div className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-full shadow-sm shadow-blue-900/10">
+  <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+  <span className="text-blue-400 font-black text-xs">{gems} جوهرة 💎</span>
+</div>
       </header>
 
       <main className="p-4 max-w-md mx-auto">
@@ -242,6 +258,16 @@ export default function Mo5tasarApp() {
                 </div>
               </div>
             </div>
+            <div className="bg-blue-600/10 border border-blue-600/20 p-4 rounded-2xl text-center space-y-3 mb-4">
+  <p className="text-xs text-blue-300 font-bold">💎 رصيدك الحالي: {gems} جوهرة</p>
+  <button 
+    onClick={handleWatchAd}
+    disabled={isWatchingAd}
+    className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-900/30 active:scale-95 disabled:opacity-50"
+  >
+    {isWatchingAd ? "جاري تحضير الجواهر... ⏳" : "احصل على 30 جوهرة مجاناً ✨"}
+  </button>
+</div>
             <div className="p-4 text-center">
               <p className="text-[10px] text-slate-600">نسخة مختصر v1.0 - المنهج الجزائري 🇩🇿</p>
             </div>
