@@ -70,7 +70,7 @@ const generateAISummary = async (text, level, subject, isDetailed) => {
 
 // --- 3. المكون الرئيسي للتطبيق ---
 export default function Mo5tasarApp() {
-  const [activeTab, setActiveTab] = useState('home'); // home, history, settings, result
+  const [activeTab, setActiveTab] = useState('home');
   const [mode, setMode] = useState('ocr');
   const [level, setLevel] = useState('');
   const [year, setYear] = useState('');
@@ -80,35 +80,42 @@ export default function Mo5tasarApp() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [summary, setSummary] = useState(null);
   const [history, setHistory] = useState([]);
-  const [toast, setToast] = useState({ show: false, message: '' });
-// دالة مساعدة لإظهار التنبيه وإخفائه تلقائياً
-const showNotification = (msg) => {
-  setToast({ show: true, message: msg });
-  setTimeout(() => setToast({ show: false, message: '' }), 5000); // يختفي بعد 3 ثواني
-};
-  // --- إضافة نظام الجواهر (نضيفها هنا مع بقية الـ useState) ---
+  const fileInputRef = useRef(null);
+
+  // --- نظام الجواهر والتنبيهات الجديد ---
   const [gems, setGems] = useState(() => {
     const saved = localStorage.getItem('mo5tasar_gems');
-    return saved !== null ? parseInt(saved) : 100; // يبدأ بـ 100 جوهرة
+    return saved !== null ? parseInt(saved) : 100;
   });
+
+  const [toast, setToast] = useState({ show: false, message: '' });
+  const [isWatchingAd, setIsWatchingAd] = useState(false);
+
   useEffect(() => {
     localStorage.setItem('mo5tasar_gems', gems.toString());
   }, [gems]);
-  const [isWatchingAd, setIsWatchingAd] = useState(false);
-  const handleWatchAd = () => {
-    setIsWatchingAd(true);
-    setTimeout(() => {
-      setGems(prev => prev + 30); // مكافأة 30 جوهرة
-      setIsWatchingAd(false);
-      showNotification("suiiii! أضفنا 30 جوهرة لرصيدك.. واصل تألقك! 💎✨");
-    }, 7000); // ينتظر 7 ثوانٍ
-  };
-  const fileInputRef = useRef(null);
+
   useEffect(() => {
     const saved = localStorage.getItem('mo5tasar_history');
     if (saved) setHistory(JSON.parse(saved));
   }, []);
+
+  const showNotification = (msg) => {
+    setToast({ show: true, message: msg });
+    setTimeout(() => setToast({ show: false, message: '' }), 3000);
+  };
+
+  const handleWatchAd = () => {
+    setIsWatchingAd(true);
+    setTimeout(() => {
+      setGems(prev => prev + 30);
+      setIsWatchingAd(false);
+      showNotification("يا بطل! أضفنا 30 جوهرة لرصيدك.. واصل تألقك! 💎✨");
+    }, 7000);
+  };
+
   const handleCameraClick = () => fileInputRef.current.click();
+
   const processImage = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -124,9 +131,19 @@ const showNotification = (msg) => {
   };
 
   const handleSummarize = async () => {
-    if (mode === 'curriculum' && (!level || !year || !subject)) return showNotification("يرجى إكمال اختيار المنهاج");
-    if (mode === 'ocr' && !inputText) return showNotification("يرجى كتابة نص أو التقاط صورة");
-    if (gems < 10) return showNotification("رصيدك من الجواهر خلص! 💎 اشحن رصيدك من الإعدادات.");
+    if (gems < 10) {
+      showNotification("رصيدك من الجواهر غير كافٍ! اشحن رصيدك 💎");
+      return;
+    }
+    if (mode === 'curriculum' && (!level || !year || !subject)) {
+      showNotification("يرجى إكمال اختيار المنهاج");
+      return;
+    }
+    if (mode === 'ocr' && !inputText) {
+      showNotification("يرجى كتابة نص أو التقاط صورة");
+      return;
+    }
+
     setIsProcessing(true);
     try {
       const result = await generateAISummary(
@@ -136,18 +153,17 @@ const showNotification = (msg) => {
         isDetailed
       );
       setSummary(result);
-      setGems(prev => prev - 10);
+      setGems(prev => prev - 10); // خصم الجواهر
       const newHistory = [{ ...result, subject: subject || 'نص حر', date: new Date().toLocaleString('ar-DZ') }, ...history];
-      setHistory(newHistory.slice(0, 10)); // حفظ آخر 10 عمليات
+      setHistory(newHistory.slice(0, 10));
       localStorage.setItem('mo5tasar_history', JSON.stringify(newHistory.slice(0, 10)));
       setActiveTab('result');
     } catch (e) {
-      showNotification("خطأ! تأكد من مفتاح API في Vercel");
+      showNotification("خطأ في الاتصال بالذكاء الاصطناعي");
     } finally {
       setIsProcessing(false);
     }
   };
-
   return (
   <div className="min-h-screen bg-[#020617] bg-gradient-to-b from-[#020617] via-[#0f172a] to-[#020617] text-slate-100 font-sans pb-24 transition-all duration-700" dir="rtl">
       {/* Header */}
