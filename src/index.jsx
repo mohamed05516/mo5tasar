@@ -351,18 +351,6 @@ export default function Mo5tasarApp() {
 
       {/* Navigation Bar */}
     <nav className="fixed bottom-6 left-4 right-4 bg-[#0f172a]/80 backdrop-blur-2xl border border-white/10 p-2 rounded-[2rem] flex justify-around items-center shadow-2xl z-50">
-  <button onClick={() => setActiveTab('history')} className={`p-4 rounded-2xl transition-all duration-300 ${activeTab === 'history' ? 'bg-blue-500/20 text-blue-400' : 'text-slate-500 hover:text-slate-300'}`}>
-    <History size={24} />
-  </button>
-  
-  <button onClick={() => setActiveTab('home')} className={`p-4 rounded-2xl transition-all duration-500 ${activeTab === 'home' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/40 -translate-y-2' : 'bg-slate-800 text-slate-400'}`}>
-    <Home size={24} />
-  </button>
-
-  <button onClick={() => setActiveTab('settings')} className={`p-4 rounded-2xl transition-all duration-300 ${activeTab === 'settings' ? 'bg-blue-500/20 text-blue-400' : 'text-slate-500 hover:text-slate-300'}`}>
-    <Settings size={24} />
-  </button>
-</nav>
         <button onClick={() => setActiveTab('history')} className={`flex flex-col items-center gap-1.5 transition-all ${activeTab === 'history' ? 'text-emerald-500 scale-110' : 'text-slate-500'}`}>
           <History size={22} /><span className="text-[9px] font-bold">السجل</span>
         </button>
