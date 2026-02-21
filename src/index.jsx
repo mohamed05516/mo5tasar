@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { 
-  Sparkles, Coins, Home, History, Settings, Download, Copy, 
+ Sparkles, Coins, Home, History, Settings, Download, Copy, 
   Camera, Trash2, CheckCircle2, AlertTriangle, Lightbulb, 
-  ChevronLeft, Moon, Sun, BookOpen, Search, X
+  ChevronLeft, Moon, Sun, BookOpen, Search, X, Zap
 } from 'lucide-react';
 import Tesseract from 'tesseract.js';
 
@@ -187,9 +187,9 @@ export default function Mo5tasarApp() {
           <div className="space-y-5 animate-in fade-in duration-500">
             <div className="flex bg-[#161b2c] p-1 rounded-2xl border border-slate-800">
               <button 
-  onClick={handleSummarize} 
-  disabled={isProcessing || gems < 10} 
-  className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 py-4 rounded-2xl font-black text-lg shadow-xl shadow-blue-900/40 active:scale-95 transition-all flex items-center justify-center gap-2 border border-white/10"
+   onClick={handleSummarize} 
+   disabled={isProcessing || gems < 10} 
+   className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 py-4 rounded-2xl font-black text-lg shadow-xl shadow-blue-900/40 active:scale-95 transition-all flex items-center justify-center gap-2 border border-white/10"
 >
   {isProcessing ? (
     <span className="flex items-center gap-2">جاري التحليل... ✨</span>
