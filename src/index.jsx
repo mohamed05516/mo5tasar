@@ -48,7 +48,23 @@ const generateAISummary = async (text, level, subject, isDetailed) => {
       "terms": "أهم 3 مصطلحات بالعربية والفرنسية (خاصة للمواد العلمية) ومعانيها",
       "examTip": "نصيحة ذهبية لنقطة تتكرر كثيراً في الامتحانات لهذا الدرس"
     }
-
+"أنت الآن لست مجرد نموذج لغوي، أنت 'خبير المناهج التعليمية والتحليل المنطقي'. مهمتك هي فحص النص المدخل بدقة مجهرية واتباع البروتوكول التالي الصارم:
+أولاً: بروتوكول التحقق من الأهلية (Validation Phase):
+قبل البدء بأي عملية تلخيص، اسأل نفسك: هل هذا النص يمثل محتوى تعليمياً (درس، محاضرة، شرح، تجربة علمية، نص أدبي، مسألة رياضية)؟
+إذا كان النص عبارة عن كلمات عشوائية (مثل: ماهذا، سلام، هههه، أرقام بلا معنى) أو جمل تافهة لا سياق تعليمي لها، يجب عليك فوراً التوقف وإرجاع رد بصيغة JSON يحتوي على: {"error": "INVALID_INPUT"} فقط. لا تقم بالتأليف، لا تقم بالتخمين، ولا تحاول إرضاء المستخدم بكلام فارغ.
+ثانياً: بروتوكول التحليل والتلخيص (Summarization Phase):
+إذا اجتاز النص المرحلة الأولى، قم بتحويله إلى ملخص احترافي باللغة العربية الفصحى مع مراعاة النقاط التالية:
+العنوان الرئيسي: استخرج أصح عنوان يعبر عن جوهر المحتوى.
+الأفكار الجوهرية: لخص الدرس في نقاط مركزة (Bullet Points) تغطي كل جوانبه دون حشو.
+الشرح التفصيلي: قدم شرحاً مبسطاً وعميقاً لكل فكرة بأسلوب أكاديمي رصين.
+الكلمات المفتاحية: استخرج المصطلحات الهامة التي يجب على الطالب حفظها.
+الاستنتاج: قدم خلاصة نهائية تربط مفاهيم الدرس ببعضها.
+ثالثاً: القواعد التقنية الصارمة:
+ممنوع استخدام كلمات مثل 'أعتقد' أو 'ربما'. كن جازماً ودقيقاً.
+إذا كان النص يحتوي على أخطاء إملائية ناتجة عن المسح الضوئي (OCR)، قم بتصحيحها منطقياً بناءً على السياق قبل التلخيص.
+الرد يجب أن يكون حصراً بصيغة JSON منظمة جداً تحتوي على الحقول التالية: (title, summary_points, detailed_explanation, keywords, conclusion).
+رابعاً: تحذير نهائي:
+تذكر دائماً، الهبد (Hallucination) هو عدوك الأول. إذا لم تجد محتوى تعليمياً، أرجع رسالة الخطأ المذكورة في البند الأول. الطالب يعتمد عليك، فلا تضلله."
     المدخلات (نص أو عنوان):
     ${text}
   `;
@@ -361,35 +377,48 @@ export default function Mo5tasarApp() {
           </div>
         )}
       </main>
-
-      {/* Navigation Bar */}
-    <nav className="fixed bottom-6 left-4 right-4 bg-[#0f172a]/80 backdrop-blur-2xl border border-white/10 p-2 rounded-[2rem] flex justify-around items-center shadow-2xl z-50">
-        <button onClick={() => setActiveTab('history')} className={`flex flex-col items-center gap-1.5 transition-all ${activeTab === 'history' ? 'text-emerald-500 scale-110' : 'text-slate-500'}`}>
-          <History size={22} /><span className="text-[9px] font-bold">السجل</span>
+   {/* Navigation Bar - شريط التنقل الحديث */}
+      <nav className="fixed bottom-6 left-4 right-4 bg-[#0f172a]/80 backdrop-blur-2xl border border-white/10 p-2 rounded-[2rem] flex justify-around items-center shadow-2xl z-50">
+        <button 
+          onClick={() => setActiveTab('history')} 
+          className={`p-4 rounded-2xl transition-all duration-300 ${activeTab === 'history' ? 'bg-blue-500/20 text-blue-400' : 'text-slate-500 hover:text-slate-300'}`}
+        >
+          <History size={24} />
         </button>
-        <button onClick={() => setActiveTab('home')} className={`relative -top-4 bg-emerald-500 p-4 rounded-2xl shadow-2xl shadow-emerald-500/40 transition-all active:scale-90 ${activeTab === 'home' ? 'text-white' : 'bg-slate-700 text-slate-300'}`}>
+        
+        <button 
+          onClick={() => setActiveTab('home')} 
+          className={`p-4 rounded-2xl transition-all duration-500 ${activeTab === 'home' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/40 -translate-y-2' : 'bg-slate-800 text-slate-400'}`}
+        >
           <Home size={24} />
         </button>
-        <button onClick={() => setActiveTab('settings')} className={`flex flex-col items-center gap-1.5 transition-all ${activeTab === 'settings' ? 'text-emerald-500 scale-110' : 'text-slate-500'}`}>
-          <Settings size={22} /><span className="text-[9px] font-bold">الإعدادات</span>
+
+        <button 
+          onClick={() => setActiveTab('settings')} 
+          className={`p-4 rounded-2xl transition-all duration-300 ${activeTab === 'settings' ? 'bg-blue-500/20 text-blue-400' : 'text-slate-500 hover:text-slate-300'}`}
+        >
+          <Settings size={24} />
         </button>
       </nav>
+
       {/* نظام التنبيهات الداخلي */}
-{toast.show && (
-  <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-top duration-300">
-    <div className="bg-blue-600 text-white px-6 py-3 rounded-2xl shadow-2xl shadow-blue-900/40 border border-white/20 flex items-center gap-3">
-      <div className="bg-white/20 p-1 rounded-full">
-        <Sparkles size={16} />
-      </div>
-      <p className="text-sm font-bold whitespace-nowrap">{toast.message}</p>
-    </div>
-  </div>
-)}
+      {toast.show && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-top duration-300">
+          <div className="bg-blue-600 text-white px-6 py-3 rounded-2xl shadow-2xl shadow-blue-900/40 border border-white/20 flex items-center gap-3">
+            <div className="bg-white/20 p-1 rounded-full">
+              <Sparkles size={16} />
+            </div>
+            <p className="text-sm font-bold whitespace-nowrap">{toast.message}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
 const container = document.getElementById('root');
 if (container) {
   const root = createRoot(container);
   root.render(<Mo5tasarApp />);
+}
 }
