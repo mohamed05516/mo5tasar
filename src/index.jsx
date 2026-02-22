@@ -31,18 +31,18 @@ const generateAISummary = async (text, level, subject, isDetailed) => {
   const apiKey = process.env.REACT_APP_GROQ_API_KEY;
   if (!apiKey) throw new Error("Missing API Key");
 
-  const prompt = `
+ const prompt = `
     أنت "مختصر"، خبير المناهج التعليمية في الجزائر والتحليل المنطقي الصارم.
     المستوى التعليمي: (${level}) | المادة: (${subject})
     نوع التلخيص: ${isDetailed ? 'مفصل وشامل جداً' : 'موجز ومركز على رؤوس الأقلام'}
 
     أولاً: بروتوكول التحقق من الأهلية (Validation Phase):
     - افحص المدخلات: "${text}"
-    - إذا كانت المدخلات كلمات عشوائية، تافهة، أو لا سياق تعليمي لها (مثل: ماهذا، سلام، أرقام بلا معنى)، يجب أن يكون ردك هو: {"error": "INVALID_INPUT"} ولا تضف أي كلمة أخرى.
+    - إذا كانت المدخلات كلمات عشوائية، تافهة، أو لا سياق تعليمي لها (مثلاً: ماهذا، سلام، هههه، أرقام بلا معنى)، يجب أن يكون ردك هو: {"error": "INVALID_INPUT"} ولا تضف أي كلمة أخرى.
 
     ثانياً: المهام التعليمية (في حال كان النص صالحاً):
     1. المنهج: استخدم المصطلحات المعتمدة في المدرسة الجزائرية حصراً.
-    2. الترميم: إذا كان النص مكسراً (OCR)، قم بتصحيحه منطقياً قبل التلخيص.
+    2. الترميم: إذا كان النص مكسراً نتيجة تصوير سيء، قم بتصحيحه منطقياً قبل التلخيص.
     3. التوليد الذكي: إذا كان المدخل "عنوان درس" فقط، قم بتوليد التلخيص من معرفتك بالمنهج الجزائري.
 
     ثالثاً: القواعد التقنية للرد (JSON Structure):
@@ -55,8 +55,6 @@ const generateAISummary = async (text, level, subject, isDetailed) => {
       "examTip": "نصيحة ذهبية لنقطة تتكرر كثيراً في الامتحانات لهذا الدرس",
       "conclusion": "خلاصة تربط مفاهيم الدرس ببعضها"
     }
-
-    ملاحظة: كن جازماً ودقيقاً، ممنوع التخمين أو الهبد.
   `;
 // 1. إرسال الطلب أولاً
 const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -143,49 +141,57 @@ export default function Mo5tasarApp() {
 const handleCameraClick = () => fileInputRef.current.click();
 
 const processImage = async (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
+    const file = event.target.files[0];
+    if (!file) return;
 
-  // فحص حجم الصورة (إذا كانت أكبر من 4MB قد تسبب خطأ)
-  if (file.size > 4 * 1024 * 1024) {
-    showToast("الصورة كبيرة جداً، جرب التقاط صورة أصغر أو قصها.");
-    return;
-  }
+    const apiKey = process.env.REACT_APP_GROQ_API_KEY; 
+    setIsProcessing(true);
+    showToast("جاري معالجة الصورة بذكاء خارق... ⏳");
 
-  const apiKey = process.env.REACT_APP_GROQ_API_KEY; 
-  setIsProcessing(true);
-  showToast("جاري المعالجة الذكية... ⏳");
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64Image = reader.result;
 
-  const reader = new FileReader();
-  reader.onloadend = async () => {
-    // تنظيف صيغة الـ Base64 لضمان قبولها
-    const base64Image = reader.result;
+      try {
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: "llama-3.2-11b-vision-preview",
+            messages: [
+              {
+                role: "user",
+                content: [
+                  { type: "text", text: "استخرج النص من هذه الصورة باللغة العربية والفرنسية بدقة عالية." },
+                  { type: "image_url", image_url: { url: base64Image } }
+                ]
+              }
+            ],
+            temperature: 0.1
+          })
+        });
 
-    try {
-      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: "llama-3.2-11b-vision-preview",
-          messages: [
-            {
-              role: "user",
-              content: [
-                { type: "text", text: "استخرج النص من هذه الصورة باللغة العربية والفرنسية." },
-                {
-                  type: "image_url",
-                  image_url: { url: base64Image }
-                }
-              ]
-            }
-          ],
-          temperature: 0.1
-        })
-      });
+        const data = await response.json();
+        
+        if (!response.ok) throw new Error(data.error?.message || "فشل الاتصال");
 
+        const extractedText = data.choices[0].message.content;
+        if (extractedText) {
+          setInputText(extractedText);
+          showToast("تمت القراءة بنجاح! ✨");
+        }
+      } catch (error) {
+        console.error("Vision Error:", error);
+        showToast("تنبيه: " + error.message);
+      } finally {
+        setIsProcessing(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
       const data = await response.json();
 
       // إذا أرجع السيرفر خطأ (هنا سنعرف السبب الحقيقي)
@@ -481,30 +487,20 @@ const processImage = async (event) => {
           </div>
         )}
       </main>
-   {/* Navigation Bar - شريط التنقل الحديث */}
+    {/* Navigation Bar */}
       <nav className="fixed bottom-6 left-4 right-4 bg-[#0f172a]/80 backdrop-blur-2xl border border-white/10 p-2 rounded-[2rem] flex justify-around items-center shadow-2xl z-50">
-        <button 
-          onClick={() => setActiveTab('history')} 
-          className={`p-4 rounded-2xl transition-all duration-300 ${activeTab === 'history' ? 'bg-blue-500/20 text-blue-400' : 'text-slate-500 hover:text-slate-300'}`}
-        >
+        <button onClick={() => setActiveTab('history')} className={`p-4 rounded-2xl transition-all ${activeTab === 'history' ? 'text-blue-400 bg-blue-400/10' : 'text-slate-500'}`}>
           <History size={24} />
         </button>
         
-        <button 
-          onClick={() => setActiveTab('home')} 
-          className={`p-4 rounded-2xl transition-all duration-500 ${activeTab === 'home' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/40 -translate-y-2' : 'bg-slate-800 text-slate-400'}`}
-        >
+        <button onClick={() => setActiveTab('home')} className={`p-4 rounded-2xl transition-all ${activeTab === 'home' ? 'bg-blue-600 text-white shadow-lg -translate-y-2' : 'bg-slate-700 text-slate-300'}`}>
           <Home size={24} />
         </button>
 
-        <button 
-          onClick={() => setActiveTab('settings')} 
-          className={`p-4 rounded-2xl transition-all duration-300 ${activeTab === 'settings' ? 'bg-blue-500/20 text-blue-400' : 'text-slate-500 hover:text-slate-300'}`}
-        >
+        <button onClick={() => setActiveTab('settings')} className={`p-4 rounded-2xl transition-all ${activeTab === 'settings' ? 'text-blue-400 bg-blue-400/10' : 'text-slate-500'}`}>
           <Settings size={24} />
         </button>
       </nav>
-
       {/* نظام التنبيهات الداخلي */}
       {toast.show && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-top duration-300">
