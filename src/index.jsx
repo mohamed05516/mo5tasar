@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { 
- Sparkles, Coins, Home, History, Settings, Download, Copy, 
-  Camera, Trash2, CheckCircle2, AlertTriangle, Lightbulb, 
-  ChevronLeft, Moon, Sun, BookOpen, Search, X, Zap
+ Sparkles, Home, History, Settings, Download, Copy, 
+ Camera, Trash2, AlertTriangle, Lightbulb, 
+ ChevronLeft, Moon, BookOpen, X 
 } from 'lucide-react';
-import Tesseract from 'tesseract.js';
 
-// --- 1. قاعدة بيانات المناهج الجزائرية الكاملة (بدون اختصار) ---
+// --- 1. قاعدة بيانات المناهج الجزائرية ---
 const curriculumData = {
   primary: {
     label: 'الابتدائي',
@@ -26,74 +25,7 @@ const curriculumData = {
   }
 };
 
-// --- 2. دالة الذكاء الاصطناعي مع البرومبت المطور (ترميم + عنوان فقط + اللمسة الجزائرية) ---
-const generateAISummary = async (text, level, subject, isDetailed) => {
-  const apiKey = process.env.REACT_APP_GROQ_API_KEY;
-  if (!apiKey) throw new Error("Missing API Key");
-
- const prompt = `
-    أنت "مختصر"، خبير المناهج التعليمية في الجزائر والتحليل المنطقي الصارم.
-    المستوى التعليمي: (${level}) | المادة: (${subject})
-    نوع التلخيص: ${isDetailed ? 'مفصل وشامل جداً' : 'موجز ومركز على رؤوس الأقلام'}
-
-    أولاً: بروتوكول التحقق من الأهلية (Validation Phase):
-    - افحص المدخلات: "${text}"
-    - إذا كانت المدخلات كلمات عشوائية، تافهة، أو لا سياق تعليمي لها (مثلاً: ماهذا، سلام، هههه، أرقام بلا معنى)، يجب أن يكون ردك هو: {"error": "INVALID_INPUT"} ولا تضف أي كلمة أخرى.
-
-    ثانياً: المهام التعليمية (في حال كان النص صالحاً):
-    1. المنهج: استخدم المصطلحات المعتمدة في المدرسة الجزائرية حصراً.
-    2. الترميم: إذا كان النص مكسراً نتيجة تصوير سيء، قم بتصحيحه منطقياً قبل التلخيص.
-    3. التوليد الذكي: إذا كان المدخل "عنوان درس" فقط، قم بتوليد التلخيص من معرفتك بالمنهج الجزائري.
-
-    ثالثاً: القواعد التقنية للرد (JSON Structure):
-    يجب أن يكون الرد بتنسيق JSON حصراً وبالحقول التالية:
-    {
-      "title": "عنوان الدرس بدقة",
-      "mainIdea": "تمهيد يربط الدرس بالوحدة الدراسية في سطر واحد",
-      "details": "الشرح التفصيلي (استخدم • للنقاط و \\n للسطر الجديد)",
-      "terms": "أهم 3 مصطلحات بالعربية والفرنسية ومعانيها (مثال: الخلية - La cellule)",
-      "examTip": "نصيحة ذهبية لنقطة تتكرر كثيراً في الامتحانات لهذا الدرس",
-      "conclusion": "خلاصة تربط مفاهيم الدرس ببعضها"
-    }
-  `;
-// 1. إرسال الطلب أولاً
-const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-  method: "POST",
-  headers: { 
-    "Authorization": `Bearer ${apiKey}`, 
-    "Content-Type": "application/json" 
-  },
-  body: JSON.stringify({
-    model: "llama-3.3-70b-versatile",
-    messages: [
-      { role: "system", content: "مساعد تربوي جزائري دقيق." }, 
-      { role: "user", content: prompt }
-    ],
-    temperature: 0.6,
-    response_format: { type: "json_object" }
-  })
-});
-
-// 2. تحويل الرد إلى JSON
-const data = await response.json();
-const result = JSON.parse(data.choices[0].message.content);
-
-// 3. فحص إذا كان هناك خطأ في المحتوى (البروتوكول الصارم)
-if (result.error === "INVALID_INPUT") {
-  showToast("عفواً! النص غير مفهوم كدرس. تأكد من جودة الصورة أو النص.");
-  setIsProcessing(false);
-  return; 
-}
-
-// 4. إذا كان كل شيء تمام، اعرض التلخيص
-setSummary(result);
-setIsProcessing(false);
-  
-  const data = await response.json();
-  return JSON.parse(data.choices[0].message.content);
-};
-
-// --- 3. المكون الرئيسي للتطبيق ---
+// --- 2. المكون الرئيسي للتطبيق ---
 export default function Mo5tasarApp() {
   const [activeTab, setActiveTab] = useState('home');
   const [mode, setMode] = useState('ocr');
@@ -106,15 +38,10 @@ export default function Mo5tasarApp() {
   const [summary, setSummary] = useState(null);
   const [history, setHistory] = useState([]);
   const fileInputRef = useRef(null);
-
-  // --- نظام الجواهر والتنبيهات الجديد ---
-  const [gems, setGems] = useState(() => {
-    const saved = localStorage.getItem('mo5tasar_gems');
-    return saved !== null ? parseInt(saved) : 100;
-  });
-
+  const [gems, setGems] = useState(() => Number(localStorage.getItem('mo5tasar_gems')) || 100);
   const [toast, setToast] = useState({ show: false, message: '' });
-  const [isWatchingAd, setIsWatchingAd] = useState(false);
+
+  const apiKey = process.env.REACT_APP_GROQ_API_KEY;
 
   useEffect(() => {
     localStorage.setItem('mo5tasar_gems', gems.toString());
@@ -130,386 +57,210 @@ export default function Mo5tasarApp() {
     setTimeout(() => setToast({ show: false, message: '' }), 3000);
   };
 
-  const handleWatchAd = () => {
-    setIsWatchingAd(true);
-    setTimeout(() => {
-      setGems(prev => prev + 30);
-      setIsWatchingAd(false);
-      showNotification("يا بطل! أضفنا 30 جوهرة لرصيدك.. واصل تألقك! 💎✨");
-    }, 7000);
-  };
-const handleCameraClick = () => fileInputRef.current.click();
-
-const processImage = async (event) => {
+  // --- دالة قراءة الصور الذكية (Vision) ---
+  const processImage = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
-    const apiKey = process.env.REACT_APP_GROQ_API_KEY; 
     setIsProcessing(true);
-    showToast("جاري معالجة الصورة بذكاء خارق... ⏳");
+    showNotification("جاري معالجة الصورة بذكاء... 👀");
 
     const reader = new FileReader();
     reader.onloadend = async () => {
       const base64Image = reader.result;
-
       try {
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
-          headers: {
-            "Authorization": `Bearer ${apiKey}`,
-            "Content-Type": "application/json"
-          },
+          headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             model: "llama-3.2-11b-vision-preview",
-            messages: [
-              {
-                role: "user",
-                content: [
-                  { type: "text", text: "استخرج النص من هذه الصورة باللغة العربية والفرنسية بدقة عالية." },
-                  { type: "image_url", image_url: { url: base64Image } }
-                ]
-              }
-            ],
-            temperature: 0.1
+            messages: [{
+              role: "user",
+              content: [
+                { type: "text", text: "استخرج النص من هذه الصورة باللغة العربية والفرنسية بدقة عالية." },
+                { type: "image_url", image_url: { url: base64Image } }
+              ]
+            }]
           })
         });
-
         const data = await response.json();
-        
-        if (!response.ok) throw new Error(data.error?.message || "فشل الاتصال");
-
         const extractedText = data.choices[0].message.content;
-        if (extractedText) {
-          setInputText(extractedText);
-          showToast("تمت القراءة بنجاح! ✨");
-        }
+        setInputText(extractedText);
+        showNotification("تمت القراءة بنجاح! ✨");
       } catch (error) {
-        console.error("Vision Error:", error);
-        showToast("تنبيه: " + error.message);
+        showNotification("فشلت قراءة الصورة.");
       } finally {
         setIsProcessing(false);
       }
     };
     reader.readAsDataURL(file);
   };
-      const data = await response.json();
 
-      // إذا أرجع السيرفر خطأ (هنا سنعرف السبب الحقيقي)
-      if (!response.ok) {
-        console.error("Groq API Error Details:", data);
-        throw new Error(data.error?.message || "خطأ في الاتصال بالسيرفر");
-      }
-
-      const extractedText = data.choices[0].message.content;
-      if (extractedText) {
-        setInputText(extractedText);
-        showToast("تمت القراءة بنجاح! ✨");
-      }
-    } catch (error) {
-      console.error("Full Error Record:", error);
-      // هذا التنبيه سيخبرك بالخطأ الحقيقي (مثلاً: Invalid API Key أو Rate Limit)
-      showToast("تنبيه: " + error.message);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-  reader.readAsDataURL(file);
-};
-      const data = await response.json();
-
-      // فحص إذا كان الـ API أرجع خطأ داخلي
-      if (data.error) {
-        console.error("API Error:", data.error);
-        showToast(`خطأ من الخادم: ${data.error.message}`);
-        return;
-      }
-
-      const extractedText = data.choices[0].message.content;
-
-      if (extractedText) {
-        setInputText(extractedText);
-        showToast("تمت القراءة بنجاح! ✨");
-      }
-    } catch (error) {
-      console.error("Vision Error:", error);
-      showToast("فشلت القراءة. تأكد من اتصال الإنترنت.");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-  reader.readAsDataURL(file);
-};
- 
-      const data = await response.json();
-      const extractedText = data.choices[0].message.content;
-
-      if (extractedText) {
-        setInputText(extractedText); // وضع النص في الصندوق تلقائياً
-        showToast("تمت القراءة بنجاح! يمكنك الآن الضغط على تلخيص. ✨");
-      }
-    } catch (error) {
-      console.error("Vision Error:", error);
-      showToast("عفواً، فشلت قراءة الصورة. تأكد من الإضاءة.");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-  reader.readAsDataURL(file);
-};
+  // --- دالة التلخيص الرئيسية مع بروتوكول التحقق ---
   const handleSummarize = async () => {
-    if (gems < 10) {
-      showNotification("رصيدك من الجواهر غير كافٍ! اشحن رصيدك 💎");
-      return;
-    }
-    if (mode === 'curriculum' && (!level || !year || !subject)) {
-      showNotification("يرجى إكمال اختيار المنهاج");
-      return;
-    }
-    if (mode === 'ocr' && !inputText) {
-      showNotification("يرجى كتابة نص أو التقاط صورة");
-      return;
-    }
+    if (gems < 10) return showNotification("رصيدك غير كافٍ! 💎");
+    if (mode === 'ocr' && !inputText) return showNotification("يرجى إدخال نص أو صورة");
 
     setIsProcessing(true);
+    const prompt = `
+      أنت "مختصر"، خبير تعليمي جزائري. المستوى: (${level}) | المادة: (${subject}).
+      المهمة: فحص النص التالي: "${inputText || 'درس ' + subject}".
+      1. إذا كان تافهاً أو غير تعليمي رد بـ: {"error": "INVALID_INPUT"}.
+      2. إذا كان صالحاً، لخصه بتنسيق JSON: { "title": "", "mainIdea": "", "details": "", "terms": "", "examTip": "" }.
+      استخدم المنهج الجزائري والمصطلحات الفرنسية للمواد العلمية.
+    `;
+
     try {
-      const result = await generateAISummary(
-        inputText || `درس ${subject} للسنة ${year}`, 
-        level ? curriculumData[level].label : 'عام', 
-        subject || 'عام', 
-        isDetailed
-      );
-      setSummary(result);
-      setGems(prev => prev - 10); // خصم الجواهر
-      const newHistory = [{ ...result, subject: subject || 'نص حر', date: new Date().toLocaleString('ar-DZ') }, ...history];
-      setHistory(newHistory.slice(0, 10));
-      localStorage.setItem('mo5tasar_history', JSON.stringify(newHistory.slice(0, 10)));
-      setActiveTab('result');
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [{ role: "user", content: prompt }],
+          response_format: { type: "json_object" }
+        })
+      });
+      const data = await response.json();
+      const result = JSON.parse(data.choices[0].message.content);
+
+      if (result.error === "INVALID_INPUT") {
+        showNotification("هذا ليس درساً تعليمياً! ❌");
+      } else {
+        setSummary(result);
+        setGems(prev => prev - 10);
+        const newHistory = [{ ...result, subject: subject || 'نص حر', date: new Date().toLocaleString('ar-DZ') }, ...history];
+        setHistory(newHistory.slice(0, 10));
+        localStorage.setItem('mo5tasar_history', JSON.stringify(newHistory.slice(0, 10)));
+        setActiveTab('result');
+      }
     } catch (e) {
       showNotification("خطأ في الاتصال بالذكاء الاصطناعي");
     } finally {
       setIsProcessing(false);
     }
   };
+
   return (
-  <div className="min-h-screen bg-[#020617] bg-gradient-to-b from-[#020617] via-[#0f172a] to-[#020617] text-slate-100 font-sans pb-24 transition-all duration-700" dir="rtl">
+    <div className="min-h-screen bg-[#020617] text-slate-100 font-sans pb-24" dir="rtl">
       {/* Header */}
-    <header className="p-4 flex justify-between items-center bg-[#0f172a]/60 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50">
+      <header className="p-4 flex justify-between items-center bg-[#0f172a]/60 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50">
         <div className="flex items-center gap-2">
-          <div className="bg-emerald-500 p-1.5 rounded-lg shadow-lg shadow-emerald-500/20">
+          <div className="bg-emerald-500 p-1.5 rounded-lg">
             <Sparkles size={18} className="text-white" />
           </div>
-          <span className="font-black text-xl tracking-tight">مختصر</span>
+          <span className="font-black text-xl">مختصر</span>
         </div>
-     <div className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-full relative group">
-  <div className="w-2 h-2 bg-blue-400 rounded-full animate-ping absolute opacity-75"></div>
-  <div className="w-2 h-2 bg-blue-500 rounded-full relative"></div>
-  <span className="text-blue-400 font-black text-xs tracking-tight">{gems} جوهرة 💎</span>
-</div>
+        <div className="bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-full">
+          <span className="text-blue-400 font-black text-xs">{gems} جوهرة 💎</span>
+        </div>
       </header>
 
       <main className="p-4 max-w-md mx-auto">
-{/* الصفحة الرئيسية */}
         {activeTab === 'home' && (
-          <div className="space-y-5 animate-in fade-in duration-500">
-            
-            {/* 1. شريط الاختيارات العلوي (نظيف ومرتب) */}
+          <div className="space-y-5 animate-in fade-in">
             <div className="flex bg-[#161b2c] p-1 rounded-2xl border border-slate-800">
-              <button 
-                onClick={() => setMode('ocr')} 
-                className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${mode === 'ocr' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500'}`}
-              >
-                نص / كاميرا
-              </button>
-              <button 
-                onClick={() => setMode('curriculum')} 
-                className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${mode === 'curriculum' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500'}`}
-              >
-                المنهاج
-              </button>
+              <button onClick={() => setMode('ocr')} className={`flex-1 py-3 rounded-xl font-bold text-sm ${mode === 'ocr' ? 'bg-emerald-600 text-white' : 'text-slate-500'}`}>كاميرا</button>
+              <button onClick={() => setMode('curriculum')} className={`flex-1 py-3 rounded-xl font-bold text-sm ${mode === 'curriculum' ? 'bg-emerald-600 text-white' : 'text-slate-500'}`}>المنهاج</button>
             </div>
 
-            {/* 2. صندوق العمليات الكبير */}
             <div className="bg-[#161b2c] p-6 rounded-[2.5rem] border border-slate-800 shadow-2xl space-y-4">
-              
               {mode === 'ocr' ? (
                 <div className="relative">
                   <textarea 
-                    className="w-full h-44 bg-[#020617]/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 outline-none focus:border-blue-500/50 transition-all resize-none text-sm leading-relaxed text-blue-50 placeholder:text-slate-600 shadow-inner"
+                    className="w-full h-44 bg-[#020617]/40 rounded-2xl p-4 border border-white/5 outline-none focus:border-blue-500/50 text-sm text-blue-50 placeholder:text-slate-600"
                     placeholder="حط درسك هنا أو استعمل الكاميرا..."
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                   />
-                  <button onClick={handleCameraClick} className="absolute bottom-4 left-4 p-3 bg-emerald-600 rounded-xl shadow-xl hover:bg-emerald-500 transition-all">
+                  <button onClick={() => fileInputRef.current.click()} className="absolute bottom-4 left-4 p-3 bg-emerald-600 rounded-xl">
                     <Camera size={20} />
                   </button>
                   <input type="file" ref={fileInputRef} onChange={processImage} hidden accept="image/*" />
                 </div>
               ) : (
-                <div className="space-y-4 animate-in slide-in-from-bottom-2">
-                  <select className="w-full p-4 bg-[#0b0f1a] rounded-2xl border border-slate-800 font-bold text-slate-300" value={level} onChange={(e)=>{setLevel(e.target.value); setYear(''); setSubject('');}}>
-                    <option value="">اختر الطور التعليمي</option>
+                <div className="space-y-4">
+                  <select className="w-full p-4 bg-[#0b0f1a] rounded-2xl border border-slate-800 text-slate-300" value={level} onChange={(e)=>setLevel(e.target.value)}>
+                    <option value="">اختر الطور</option>
                     <option value="primary">الابتدائي</option>
                     <option value="middle">المتوسط</option>
                     <option value="high">الثانوي</option>
                   </select>
                   {level && (
-                    <select className="w-full p-4 bg-[#0b0f1a] rounded-2xl border border-slate-800 font-bold text-slate-300 animate-in fade-in" value={year} onChange={(e)=>setYear(e.target.value)}>
-                      <option value="">السنة الدراسية</option>
+                    <select className="w-full p-4 bg-[#0b0f1a] rounded-2xl border border-slate-800 text-slate-300" value={year} onChange={(e)=>setYear(e.target.value)}>
+                      <option value="">السنة</option>
                       {curriculumData[level].years.map(y => <option key={y} value={y}>{y}</option>)}
                     </select>
                   )}
                   {year && (
-                    <select className="w-full p-4 bg-[#0b0f1a] rounded-2xl border border-slate-800 font-bold text-slate-300 animate-in fade-in" value={subject} onChange={(e)=>setSubject(e.target.value)}>
-                      <option value="">اختر المادة</option>
+                    <select className="w-full p-4 bg-[#0b0f1a] rounded-2xl border border-slate-800 text-slate-300" value={subject} onChange={(e)=>setSubject(e.target.value)}>
+                      <option value="">المادة</option>
                       {curriculumData[level].subjects.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   )}
                 </div>
               )}
 
-              {/* 3. الزر الأزرق في مكانه الصحيح (أسفل المحتوى) */}
               <button 
                 onClick={handleSummarize} 
-                disabled={isProcessing || gems < 10} 
-                className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 py-4 rounded-2xl font-black text-lg shadow-xl shadow-blue-900/40 active:scale-95 transition-all flex items-center justify-center gap-2 border border-white/10"
+                disabled={isProcessing}
+                className="w-full bg-blue-600 py-4 rounded-2xl font-black text-lg shadow-xl"
               >
-                {isProcessing ? (
-                  <span className="flex items-center gap-2">جاري التحليل... ✨</span>
-                ) : (
-                  <>ابدأ التلخيص <Sparkles size={20} className="fill-white/20" /></>
-                )}
+                {isProcessing ? "جاري التحليل..." : "ابدأ التلخيص"}
               </button>
-
-            </div>
-          </div>
-        )}
-        {/* السجل */}
-        {activeTab === 'history' && (
-          <div className="space-y-4 animate-in slide-in-from-left-4">
-            <div className="flex justify-between items-center px-2">
-              <h2 className="text-xl font-bold">آخر الملخصات</h2>
-              <button onClick={() => {setHistory([]); localStorage.removeItem('mo5tasar_history');}} className="text-red-400 p-2 hover:bg-red-400/10 rounded-lg transition-all"><Trash2 size={20}/></button>
-            </div>
-            {history.length === 0 ? (
-              <div className="text-center py-20 bg-[#161b2c] rounded-[2rem] border border-dashed border-slate-800 text-slate-500">لا توجد سجلات بعد</div>
-            ) : (
-              history.map((item, index) => (
-                <div key={index} onClick={() => {setSummary(item); setActiveTab('result');}} className="bg-[#161b2c] p-4 rounded-2xl border border-slate-800 flex justify-between items-center cursor-pointer hover:border-emerald-500/50 transition-all group">
-                  <div>
-                    <h3 className="font-bold text-emerald-400 group-hover:translate-x-[-4px] transition-transform">{item.subject}</h3>
-                    <p className="text-[10px] text-slate-500 mt-1">{item.date}</p>
-                  </div>
-                  <ChevronLeft className="text-slate-600" size={18} />
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
-        {/* الإعدادات */}
-        {activeTab === 'settings' && (
-          <div className="space-y-6 animate-in slide-in-from-right-4">
-            <h2 className="text-xl font-bold px-2">الإعدادات</h2>
-            <div className="bg-[#161b2c] p-6 rounded-[2rem] border border-slate-800 space-y-6 shadow-xl">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-500"><BookOpen size={20}/></div>
-                  <div>
-                    <h3 className="font-bold text-sm">نوع التلخيص</h3>
-                    <p className="text-[10px] text-slate-500">تحكم في كمية المعلومات المستخرجة</p>
-                  </div>
-                </div>
-                <button onClick={() => setIsDetailed(!isDetailed)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${isDetailed ? 'bg-emerald-600' : 'bg-slate-700 text-slate-400'}`}>
-                  {isDetailed ? 'مفصل' : 'موجز'}
-                </button>
-              </div>
-              <div className="border-t border-slate-800 pt-5 flex justify-between items-center opacity-50">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500"><Moon size={20}/></div>
-                  <h3 className="font-bold text-sm">الوضع الداكن (تلقائي)</h3>
-                </div>
-              </div>
-            </div>
-            <div className="bg-blue-600/10 border border-blue-600/20 p-4 rounded-2xl text-center space-y-3 mb-4">
-  <p className="text-xs text-blue-300 font-bold">💎 رصيدك الحالي: {gems} جوهرة</p>
-  <button 
-    onClick={handleWatchAd}
-    disabled={isWatchingAd}
-    className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-900/30 active:scale-95 disabled:opacity-50"
-  >
-    {isWatchingAd ? "جاري تحضير الجواهر... ⏳" : "احصل على 30 جوهرة مجاناً ✨"}
-  </button>
-</div>
-            <div className="p-4 text-center">
-              <p className="text-[10px] text-slate-600">نسخة مختصر v1.0 - المنهج الجزائري 🇩🇿</p>
             </div>
           </div>
         )}
 
         {/* شاشة النتيجة */}
         {activeTab === 'result' && summary && (
-          <div className="space-y-4 animate-in zoom-in-95 duration-300">
-            <div className="bg-[#161b2c] p-6 rounded-[2.5rem] border border-emerald-500/20 shadow-2xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl rounded-full"></div>
-              
-              <div className="flex justify-between items-center mb-6">
-                <button onClick={() => setActiveTab('home')} className="p-2 bg-slate-800 rounded-xl text-slate-400 hover:text-white"><X size={18}/></button>
+          <div className="space-y-4 animate-in zoom-in-95">
+            <div className="bg-[#161b2c] p-6 rounded-[2.5rem] border border-emerald-500/20 relative">
+              <div className="flex justify-between mb-6">
+                <button onClick={() => setActiveTab('home')} className="p-2 bg-slate-800 rounded-xl text-slate-400"><X size={18}/></button>
                 <div className="flex gap-2">
                   <button onClick={() => navigator.clipboard.writeText(summary.details)} className="p-2 bg-slate-800 rounded-xl text-slate-400"><Copy size={18}/></button>
-                  <button className="p-2 bg-slate-800 rounded-xl text-slate-400"><Download size={18}/></button>
                 </div>
               </div>
-
-              <div className="bg-emerald-500/10 p-4 rounded-2xl border border-emerald-500/20 mb-6">
-                <h4 className="text-emerald-400 font-bold text-xs mb-1 flex items-center gap-2"><Lightbulb size={16}/> الفكرة العامة:</h4>
-                <p className="text-sm leading-relaxed text-slate-100">{summary.mainIdea}</p>
+              <h2 className="text-xl font-bold text-emerald-400 mb-4">{summary.title}</h2>
+              <div className="bg-emerald-500/10 p-4 rounded-2xl border border-emerald-500/20 mb-4">
+                <p className="text-sm leading-relaxed">{summary.mainIdea}</p>
               </div>
-
-              <div className="space-y-4 mb-6">
-                <h4 className="font-bold text-slate-400 text-[10px] uppercase tracking-[0.2em] px-1">المحتوى التعليمي</h4>
-                <div className="text-slate-200 whitespace-pre-line leading-relaxed text-sm bg-[#0b0f1a] p-4 rounded-2xl border border-slate-800 shadow-inner">
-                  {summary.details}
-                </div>
+              <div className="bg-[#0b0f1a] p-4 rounded-2xl border border-slate-800 text-sm whitespace-pre-line mb-4">
+                {summary.details}
               </div>
-
               {summary.examTip && (
-                <div className="bg-amber-500/10 p-4 rounded-2xl border border-amber-500/20 mb-6 flex gap-3 shadow-lg shadow-amber-500/5">
+                <div className="bg-amber-500/10 p-4 rounded-2xl border border-amber-500/20 flex gap-3">
                   <AlertTriangle className="text-amber-500 shrink-0" size={20} />
-                  <div>
-                    <h5 className="text-amber-500 font-bold text-xs">نصيحة الامتحان:</h5>
-                    <p className="text-[11px] text-amber-200/80 mt-1 italic leading-relaxed">{summary.examTip}</p>
-                  </div>
+                  <p className="text-[11px] text-amber-200/80 italic">{summary.examTip}</p>
                 </div>
               )}
-
-              <button onClick={() => setActiveTab('home')} className="w-full py-4 bg-emerald-600 rounded-2xl font-bold shadow-lg shadow-emerald-500/20 hover:bg-emerald-500 transition-all">تلخيص درس جديد</button>
             </div>
           </div>
         )}
-      </main>
-    {/* Navigation Bar */}
-      <nav className="fixed bottom-6 left-4 right-4 bg-[#0f172a]/80 backdrop-blur-2xl border border-white/10 p-2 rounded-[2rem] flex justify-around items-center shadow-2xl z-50">
-        <button onClick={() => setActiveTab('history')} className={`p-4 rounded-2xl transition-all ${activeTab === 'history' ? 'text-blue-400 bg-blue-400/10' : 'text-slate-500'}`}>
-          <History size={24} />
-        </button>
-        
-        <button onClick={() => setActiveTab('home')} className={`p-4 rounded-2xl transition-all ${activeTab === 'home' ? 'bg-blue-600 text-white shadow-lg -translate-y-2' : 'bg-slate-700 text-slate-300'}`}>
-          <Home size={24} />
-        </button>
 
-        <button onClick={() => setActiveTab('settings')} className={`p-4 rounded-2xl transition-all ${activeTab === 'settings' ? 'text-blue-400 bg-blue-400/10' : 'text-slate-500'}`}>
-          <Settings size={24} />
-        </button>
-      </nav>
-      {/* نظام التنبيهات الداخلي */}
-      {toast.show && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-top duration-300">
-          <div className="bg-blue-600 text-white px-6 py-3 rounded-2xl shadow-2xl shadow-blue-900/40 border border-white/20 flex items-center gap-3">
-            <div className="bg-white/20 p-1 rounded-full">
-              <Sparkles size={16} />
-            </div>
-            <p className="text-sm font-bold whitespace-nowrap">{toast.message}</p>
+        {activeTab === 'history' && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold">السجل</h2>
+            {history.map((item, i) => (
+              <div key={i} onClick={() => {setSummary(item); setActiveTab('result');}} className="bg-[#161b2c] p-4 rounded-2xl border border-slate-800 flex justify-between cursor-pointer">
+                <span className="font-bold text-emerald-400">{item.title || item.subject}</span>
+                <ChevronLeft size={18} />
+              </div>
+            ))}
           </div>
+        )}
+      </main>
+
+      {/* Nav Bar */}
+      <nav className="fixed bottom-6 left-4 right-4 bg-[#0f172a]/80 backdrop-blur-2xl border border-white/10 p-2 rounded-[2rem] flex justify-around items-center z-50">
+        <button onClick={() => setActiveTab('history')} className={`p-4 ${activeTab === 'history' ? 'text-blue-400' : 'text-slate-500'}`}><History /></button>
+        <button onClick={() => setActiveTab('home')} className={`p-4 rounded-2xl ${activeTab === 'home' ? 'bg-blue-600 text-white' : 'text-slate-300'}`}><Home /></button>
+        <button onClick={() => setActiveTab('settings')} className={`p-4 ${activeTab === 'settings' ? 'text-blue-400' : 'text-slate-500'}`}><Settings /></button>
+      </nav>
+
+      {toast.show && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] bg-blue-600 text-white px-6 py-3 rounded-2xl shadow-2xl">
+          <p className="text-sm font-bold">{toast.message}</p>
         </div>
       )}
     </div>
@@ -520,5 +271,4 @@ const container = document.getElementById('root');
 if (container) {
   const root = createRoot(container);
   root.render(<Mo5tasarApp />);
-}
 }
