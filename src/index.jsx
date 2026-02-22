@@ -210,128 +210,58 @@ export default function Mo5tasarApp() {
             </div>
           </div>
         )}
-
-        المنهاج
-              </button>
-            </div>
-
-            {/* 2. صندوق العمليات الكبير */}
-            <div className="bg-[#161b2c] p-6 rounded-[2.5rem] border border-slate-800 shadow-2xl space-y-4">
-              
-              {mode === 'ocr' ? (
-                <div className="relative">
-                  <textarea 
-                    className="w-full h-44 bg-[#020617]/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 outline-none focus:border-blue-500/50 transition-all resize-none text-sm leading-relaxed text-blue-50 placeholder:text-slate-600 shadow-inner"
-                    placeholder="حط درسك هنا أو استعمل الكاميرا..."
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
-                  />
-                  <button onClick={handleCameraClick} className="absolute bottom-4 left-4 p-3 bg-emerald-600 rounded-xl shadow-xl hover:bg-emerald-500 transition-all">
-                    <Camera size={20} />
-                  </button>
-                  <input type="file" ref={fileInputRef} onChange={processImage} hidden accept="image/*" />
-                </div>
-              ) : (
-                <div className="space-y-4 animate-in slide-in-from-bottom-2">
-                  <select className="w-full p-4 bg-[#0b0f1a] rounded-2xl border border-slate-800 font-bold text-slate-300" value={level} onChange={(e)=>{setLevel(e.target.value); setYear(''); setSubject('');}}>
-                    <option value="">اختر الطور التعليمي</option>
-                    <option value="primary">الابتدائي</option>
-                    <option value="middle">المتوسط</option>
-                    <option value="high">الثانوي</option>
-                  </select>
-                  {level && (
-                    <select className="w-full p-4 bg-[#0b0f1a] rounded-2xl border border-slate-800 font-bold text-slate-300 animate-in fade-in" value={year} onChange={(e)=>setYear(e.target.value)}>
-                      <option value="">السنة الدراسية</option>
-                      {curriculumData[level].years.map(y => <option key={y} value={y}>{y}</option>)}
-                    </select>
-                  )}
-                  {year && (
-                    <select className="w-full p-4 bg-[#0b0f1a] rounded-2xl border border-slate-800 font-bold text-slate-300 animate-in fade-in" value={subject} onChange={(e)=>setSubject(e.target.value)}>
-                      <option value="">اختر المادة</option>
-                      {curriculumData[level].subjects.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  )}
-                </div>
-              )}
-
-              {/* 3. الزر الأزرق في مكانه الصحيح (أسفل المحتوى) */}
-              <button 
-                onClick={handleSummarize} 
-                disabled={isProcessing || gems < 10} 
-                className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 py-4 rounded-2xl font-black text-lg shadow-xl shadow-blue-900/40 active:scale-95 transition-all flex items-center justify-center gap-2 border border-white/10"
-              >
-                {isProcessing ? (
-                  <span className="flex items-center gap-2">جاري التحليل... ✨</span>
-                ) : (
-                  <>ابدأ التلخيص <Sparkles size={20} className="fill-white/20" /></>
-                )}
-              </button>
-
-            </div>
+{/* الإعدادات وشحن الجواهر */}
+{activeTab === 'settings' && (
+  <div className="space-y-6 animate-in slide-in-from-right-4">
+    <h2 className="text-xl font-bold px-2">الإعدادات</h2>
+    
+    <div className="bg-[#161b2c] p-6 rounded-[2rem] border border-slate-800 space-y-6 shadow-xl">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-500"><BookOpen size={20}/></div>
+          <div>
+            <h3 className="font-bold text-sm">نوع التلخيص</h3>
+            <p className="text-[10px] text-slate-500">تحكم في كمية المعلومات المستخرجة</p>
           </div>
-        )}
-        {/* السجل */}
-        {activeTab === 'history' && (
-          <div className="space-y-4 animate-in slide-in-from-left-4">
-            <div className="flex justify-between items-center px-2">
-              <h2 className="text-xl font-bold">آخر الملخصات</h2>
-              <button onClick={() => {setHistory([]); localStorage.removeItem('mo5tasar_history');}} className="text-red-400 p-2 hover:bg-red-400/10 rounded-lg transition-all"><Trash2 size={20}/></button>
-            </div>
-            {history.length === 0 ? (
-              <div className="text-center py-20 bg-[#161b2c] rounded-[2rem] border border-dashed border-slate-800 text-slate-500">لا توجد سجلات بعد</div>
-            ) : (
-              history.map((item, index) => (
-                <div key={index} onClick={() => {setSummary(item); setActiveTab('result');}} className="bg-[#161b2c] p-4 rounded-2xl border border-slate-800 flex justify-between items-center cursor-pointer hover:border-emerald-500/50 transition-all group">
-                  <div>
-                    <h3 className="font-bold text-emerald-400 group-hover:translate-x-[-4px] transition-transform">{item.subject}</h3>
-                    <p className="text-[10px] text-slate-500 mt-1">{item.date}</p>
-                  </div>
-                  <ChevronLeft className="text-slate-600" size={18} />
-                </div>
-              ))
-            )}
-          </div>
-        )}
+        </div>
+        <button 
+          onClick={() => setIsDetailed(!isDetailed)} 
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${isDetailed ? 'bg-emerald-600' : 'bg-slate-700 text-slate-400'}`}
+        >
+          {isDetailed ? 'مفصل' : 'موجز'}
+        </button>
+      </div>
 
-        {/* الإعدادات */}
-        {activeTab === 'settings' && (
-          <div className="space-y-6 animate-in slide-in-from-right-4">
-            <h2 className="text-xl font-bold px-2">الإعدادات</h2>
-            <div className="bg-[#161b2c] p-6 rounded-[2rem] border border-slate-800 space-y-6 shadow-xl">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-500"><BookOpen size={20}/></div>
-                  <div>
-                    <h3 className="font-bold text-sm">نوع التلخيص</h3>
-                    <p className="text-[10px] text-slate-500">تحكم في كمية المعلومات المستخرجة</p>
-                  </div>
-                </div>
-                <button onClick={() => setIsDetailed(!isDetailed)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${isDetailed ? 'bg-emerald-600' : 'bg-slate-700 text-slate-400'}`}>
-                  {isDetailed ? 'مفصل' : 'موجز'}
-                </button>
-              </div>
-              <div className="border-t border-slate-800 pt-5 flex justify-between items-center opacity-50">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500"><Moon size={20}/></div>
-                  <h3 className="font-bold text-sm">الوضع الداكن (تلقائي)</h3>
-                </div>
-              </div>
-            </div>
-            <div className="bg-blue-600/10 border border-blue-600/20 p-4 rounded-2xl text-center space-y-3 mb-4">
-  <p className="text-xs text-blue-300 font-bold">💎 رصيدك الحالي: {gems} جوهرة</p>
-  <button 
-    onClick={handleWatchAd}
-    disabled={isWatchingAd}
-    className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-900/30 active:scale-95 disabled:opacity-50"
-  >
-    {isWatchingAd ? "جاري تحضير الجواهر... ⏳" : "احصل على 30 جوهرة مجاناً ✨"}
-  </button>
-</div>
-            <div className="p-4 text-center">
-              <p className="text-[10px] text-slate-600">نسخة مختصر v1.0 - المنهج الجزائري 🇩🇿</p>
-            </div>
-          </div>
-        )}
+      <div className="border-t border-slate-800 pt-5 flex justify-between items-center opacity-50">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500"><Moon size={20}/></div>
+          <h3 className="font-bold text-sm">الوضع الداكن (تلقائي)</h3>
+        </div>
+      </div>
+    </div>
+
+    {/* صندوق شحن الجواهر */}
+    <div className="bg-blue-600/10 border border-blue-600/20 p-4 rounded-2xl text-center space-y-3 mb-4">
+      <p className="text-xs text-blue-300 font-bold">💎 رصيدك الحالي: {gems} جوهرة</p>
+      <button 
+        onClick={() => {
+            showNotification("جاري تحضير الجواهر... ⏳");
+            setTimeout(() => {
+                setGems(prev => prev + 30);
+                showNotification("مبروك! أضفنا 30 جوهرة لحيّك! 💎✨");
+            }, 3000);
+        }}
+        className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg active:scale-95"
+      >
+        احصل على 30 جوهرة مجاناً ✨
+      </button>
+    </div>
+
+    <div className="p-4 text-center">
+      <p className="text-[10px] text-slate-600">نسخة مختصر v1.0 - المنهج الجزائري 🇩🇿</p>
+    </div>
+  </div>
+)}
         {/* شاشة النتيجة */}
         {activeTab === 'result' && summary && (
           <div className="space-y-4 animate-in zoom-in-95">
