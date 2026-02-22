@@ -143,26 +143,30 @@ export default function Mo5tasarApp() {
 const handleCameraClick = () => fileInputRef.current.click();
 
 const processImage = async (event) => {
-  const file = event.target.files[0]; 
+  const file = event.target.files[0];
   if (!file) return;
 
-  // --- السطر الناقص والمهم جداً ---
-  const apiKey = process.env.REACT_APP_GROQ_API_KEY; 
-  // -------------------------------
+  // فحص حجم الصورة (إذا كانت أكبر من 4MB قد تسبب خطأ)
+  if (file.size > 4 * 1024 * 1024) {
+    showToast("الصورة كبيرة جداً، جرب التقاط صورة أصغر أو قصها.");
+    return;
+  }
 
+  const apiKey = process.env.REACT_APP_GROQ_API_KEY; 
   setIsProcessing(true);
-  showToast("جاري قراءة الصورة بذكاء خارق... 👀");
+  showToast("جاري المعالجة الذكية... ⏳");
 
   const reader = new FileReader();
   reader.onloadend = async () => {
+    // تنظيف صيغة الـ Base64 لضمان قبولها
     const base64Image = reader.result;
 
     try {
       const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
-        headers: { 
-          "Authorization": `Bearer ${apiKey}`, 
-          "Content-Type": "application/json" 
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
           model: "llama-3.2-11b-vision-preview",
@@ -170,13 +174,10 @@ const processImage = async (event) => {
             {
               role: "user",
               content: [
-                { 
-                  type: "text", 
-                  text: "استخرج كل النصوص العربية والفرنسية والانجليزية من هذه الصورة بدقة. رد بالنص المستخرج فقط." 
-                },
-                { 
-                  type: "image_url", 
-                  image_url: { url: base64Image } 
+                { type: "text", text: "استخرج النص من هذه الصورة باللغة العربية والفرنسية." },
+                {
+                  type: "image_url",
+                  image_url: { url: base64Image }
                 }
               ]
             }
@@ -185,6 +186,29 @@ const processImage = async (event) => {
         })
       });
 
+      const data = await response.json();
+
+      // إذا أرجع السيرفر خطأ (هنا سنعرف السبب الحقيقي)
+      if (!response.ok) {
+        console.error("Groq API Error Details:", data);
+        throw new Error(data.error?.message || "خطأ في الاتصال بالسيرفر");
+      }
+
+      const extractedText = data.choices[0].message.content;
+      if (extractedText) {
+        setInputText(extractedText);
+        showToast("تمت القراءة بنجاح! ✨");
+      }
+    } catch (error) {
+      console.error("Full Error Record:", error);
+      // هذا التنبيه سيخبرك بالخطأ الحقيقي (مثلاً: Invalid API Key أو Rate Limit)
+      showToast("تنبيه: " + error.message);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+  reader.readAsDataURL(file);
+};
       const data = await response.json();
 
       // فحص إذا كان الـ API أرجع خطأ داخلي
