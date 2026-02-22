@@ -140,23 +140,24 @@ export default function Mo5tasarApp() {
       showNotification("يا بطل! أضفنا 30 جوهرة لرصيدك.. واصل تألقك! 💎✨");
     }, 7000);
   };
+const handleCameraClick = () => fileInputRef.current.click();
 
-  const handleCameraClick = () => fileInputRef.current.click();
-
-  const processImage = async (event) => {
-  const file = event.target.files[0]; // تأكد أن الاسم files وليس headers
+const processImage = async (event) => {
+  const file = event.target.files[0]; 
   if (!file) return;
+
+  // --- السطر الناقص والمهم جداً ---
+  const apiKey = process.env.REACT_APP_GROQ_API_KEY; 
+  // -------------------------------
 
   setIsProcessing(true);
   showToast("جاري قراءة الصورة بذكاء خارق... 👀");
 
-  // 1. تحويل الصورة إلى Base64 (لغة يفهمها الذكاء الاصطناعي)
   const reader = new FileReader();
   reader.onloadend = async () => {
     const base64Image = reader.result;
 
     try {
-      // 2. إرسال الصورة مباشرة لموديل الرؤية في Groq
       const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: { 
@@ -164,14 +165,14 @@ export default function Mo5tasarApp() {
           "Content-Type": "application/json" 
         },
         body: JSON.stringify({
-          model: "llama-3.2-11b-vision-preview", // الموديل الذي "يرى"
+          model: "llama-3.2-11b-vision-preview",
           messages: [
             {
               role: "user",
               content: [
                 { 
                   type: "text", 
-                  text: "أنت خبير OCR. استخرج كل النصوص العربية والفرنسية من هذه الصورة بدقة. إذا كانت الصورة لدرس، استخرج النص كما هو دون تلخيص (التلخيص سيتم في خطوة لاحقة). رد بالنص المستخرج فقط." 
+                  text: "استخرج كل النصوص العربية والفرنسية والانجليزية من هذه الصورة بدقة. رد بالنص المستخرج فقط." 
                 },
                 { 
                   type: "image_url", 
@@ -180,10 +181,35 @@ export default function Mo5tasarApp() {
               ]
             }
           ],
-          temperature: 0.1 // لضمان دقة النقل وعدم التأليف
+          temperature: 0.1
         })
       });
 
+      const data = await response.json();
+
+      // فحص إذا كان الـ API أرجع خطأ داخلي
+      if (data.error) {
+        console.error("API Error:", data.error);
+        showToast(`خطأ من الخادم: ${data.error.message}`);
+        return;
+      }
+
+      const extractedText = data.choices[0].message.content;
+
+      if (extractedText) {
+        setInputText(extractedText);
+        showToast("تمت القراءة بنجاح! ✨");
+      }
+    } catch (error) {
+      console.error("Vision Error:", error);
+      showToast("فشلت القراءة. تأكد من اتصال الإنترنت.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+  reader.readAsDataURL(file);
+};
+ 
       const data = await response.json();
       const extractedText = data.choices[0].message.content;
 
