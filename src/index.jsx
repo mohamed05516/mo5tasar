@@ -353,12 +353,12 @@ export default function Mo5tasarApp() {
                     ? (isDarkMode ? 'bg-[#27272a] text-blue-100 rounded-bl-none' : 'bg-blue-600 text-white rounded-bl-none') 
                     : (isDarkMode ? 'bg-[#18181b] border border-white/5 rounded-br-none' : 'bg-white border border-gray-100 rounded-br-none')
                   }`}>
-                    {/* نص الرسالة */}
+                    {/* محتوى الرسالة */}
                     <p className="text-sm md:text-base font-medium whitespace-pre-line leading-relaxed tracking-wide">
                       {msg.content}
                     </p>
 
-                    {/* الأزرار التفاعلية (تظهر فقط لآخر رد للمساعد) */}
+                    {/* الأزرار التفاعلية للمساعد فقط */}
                     {msg.role === 'assistant' && i === chatMessages.length - 1 && (
                       <div className="flex flex-wrap gap-2 mt-6 animate-in fade-in slide-in-from-bottom-3 duration-1000">
                         <button 
@@ -382,7 +382,7 @@ export default function Mo5tasarApp() {
                       </div>
                     )}
 
-                    {/* معلومات إضافية (الوقت وزر النسخ) */}
+                    {/* معلومات إضافية تحت الرسالة */}
                     <div className="mt-4 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-all border-t border-white/5 pt-2">
                       <span className="text-[9px] font-black opacity-30 uppercase">{msg.timestamp}</span>
                       {msg.role === 'assistant' && (
@@ -397,7 +397,9 @@ export default function Mo5tasarApp() {
                   </div>
                 </div>
               ))}
-
+              <div ref={chatEndRef} />
+            </div>
+          )}
               {isProcessing && (
                 <div className="flex gap-5 animate-pulse">
                   <div className="w-10 h-10 rounded-2xl bg-gray-700 flex items-center justify-center shrink-0">
