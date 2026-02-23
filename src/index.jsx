@@ -347,7 +347,44 @@ export default function Mo5tasarApp() {
                     </div>
                   )}
                   <div className={`group relative max-w-[85%] p-6 rounded-[2.2rem] shadow-sm leading-relaxed ${
-                 
+                 {/* --- بداية فقاعة الرسالة --- */}
+<div className={`group relative max-w-[85%] p-6 rounded-[2.2rem] shadow-sm leading-relaxed ${
+  msg.role === 'user' 
+    ? (isDarkMode ? 'bg-[#27272a] text-blue-100 rounded-bl-none' : 'bg-blue-600 text-white rounded-bl-none') 
+    : (isDarkMode ? 'bg-[#18181b] border border-white/5 rounded-br-none' : 'bg-white border border-gray-100 rounded-br-none')
+}`}>
+  
+  {/* 1. نص الرسالة الأصلي */}
+  <p className="text-sm md:text-base font-medium whitespace-pre-line leading-relaxed">
+    {msg.content}
+  </p>
+
+  {/* 2. الأزرار التفاعلية (تظهر فقط تحت آخر رد للمساعد) */}
+  {msg.role === 'assistant' && i === chatMessages.length - 1 && (
+    <div className="flex flex-wrap gap-2 mt-6 animate-in fade-in slide-in-from-bottom-3 duration-1000">
+      <button 
+        onClick={() => handleSendMessage("ديرلي تمرين خفيف على هاد الدرس")}
+        className={`px-4 py-2 rounded-full text-[11px] font-black border transition-all active:scale-95 shadow-sm ${isDarkMode ? 'bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-600 hover:text-white' : 'bg-blue-50 border-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white'}`}
+      >
+        📝 اختبرني بتمرين
+      </button>
+      
+      <button 
+        onClick={() => handleSendMessage("زيد بسطلي هاد النقطة مافهمتهاش مليح")}
+        className={`px-4 py-2 rounded-full text-[11px] font-black border transition-all active:scale-95 shadow-sm ${isDarkMode ? 'bg-purple-500/10 border-purple-500/20 text-purple-400 hover:bg-purple-600 hover:text-white' : 'bg-purple-50 border-purple-100 text-purple-600 hover:bg-purple-600 hover:text-white'}`}
+      >
+        🤔 زيد بسطلي أكتر
+      </button>
+
+      <button 
+        onClick={() => handleSendMessage("واش هي الفائدة تاع هاد الدرس في حياتنا؟")}
+        className={`px-4 py-2 rounded-full text-[11px] font-black border transition-all active:scale-95 shadow-sm ${isDarkMode ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-600 hover:text-white' : 'bg-emerald-50 border-emerald-100 text-emerald-600 hover:bg-emerald-600 hover:text-white'}`}
+      >
+        💡 واش الفايدة منو؟
+      </button>
+    </div>
+  )}
+</div>
                     msg.role === 'user' 
                     ? (isDarkMode ? 'bg-[#27272a] text-blue-100 rounded-bl-none' : 'bg-blue-600 text-white rounded-bl-none') 
                     : (isDarkMode ? 'bg-[#18181b] border border-white/5 rounded-br-none' : 'bg-white border border-gray-100 rounded-br-none')
