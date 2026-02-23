@@ -330,7 +330,7 @@ export default function Mo5tasarApp() {
             </div>
           )}
 
-          {/* VIEW: CHAT SCREEN */}
+        {/* VIEW: CHAT SCREEN */}
           {view === 'chat' && (
             <div className="max-w-4xl mx-auto space-y-10 pb-32 animate-in slide-in-from-bottom-6 duration-500">
               {chatMessages.length === 0 && (
@@ -339,6 +339,7 @@ export default function Mo5tasarApp() {
                   <p className="text-xl font-bold italic">اسألني أي شيء عن المنهاج...</p>
                 </div>
               )}
+
               {chatMessages.map((msg, i) => (
                 <div key={i} className={`flex gap-5 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   {msg.role === 'assistant' && (
@@ -346,56 +347,49 @@ export default function Mo5tasarApp() {
                       <Sparkles size={18} className="text-white"/>
                     </div>
                   )}
+
                   <div className={`group relative max-w-[85%] p-6 rounded-[2.2rem] shadow-sm leading-relaxed ${
-                 {/* --- بداية فقاعة الرسالة --- */}
-<div className={`group relative max-w-[85%] p-6 rounded-[2.2rem] shadow-sm leading-relaxed ${
-  msg.role === 'user' 
-    ? (isDarkMode ? 'bg-[#27272a] text-blue-100 rounded-bl-none' : 'bg-blue-600 text-white rounded-bl-none') 
-    : (isDarkMode ? 'bg-[#18181b] border border-white/5 rounded-br-none' : 'bg-white border border-gray-100 rounded-br-none')
-}`}>
-  
-  {/* 1. نص الرسالة الأصلي */}
-  <p className="text-sm md:text-base font-medium whitespace-pre-line leading-relaxed">
-    {msg.content}
-  </p>
-
-  {/* 2. الأزرار التفاعلية (تظهر فقط تحت آخر رد للمساعد) */}
-  {msg.role === 'assistant' && i === chatMessages.length - 1 && (
-    <div className="flex flex-wrap gap-2 mt-6 animate-in fade-in slide-in-from-bottom-3 duration-1000">
-      <button 
-        onClick={() => handleSendMessage("ديرلي تمرين خفيف على هاد الدرس")}
-        className={`px-4 py-2 rounded-full text-[11px] font-black border transition-all active:scale-95 shadow-sm ${isDarkMode ? 'bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-600 hover:text-white' : 'bg-blue-50 border-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white'}`}
-      >
-        📝 اختبرني بتمرين
-      </button>
-      
-      <button 
-        onClick={() => handleSendMessage("زيد بسطلي هاد النقطة مافهمتهاش مليح")}
-        className={`px-4 py-2 rounded-full text-[11px] font-black border transition-all active:scale-95 shadow-sm ${isDarkMode ? 'bg-purple-500/10 border-purple-500/20 text-purple-400 hover:bg-purple-600 hover:text-white' : 'bg-purple-50 border-purple-100 text-purple-600 hover:bg-purple-600 hover:text-white'}`}
-      >
-        🤔 زيد بسطلي أكتر
-      </button>
-
-      <button 
-        onClick={() => handleSendMessage("واش هي الفائدة تاع هاد الدرس في حياتنا؟")}
-        className={`px-4 py-2 rounded-full text-[11px] font-black border transition-all active:scale-95 shadow-sm ${isDarkMode ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-600 hover:text-white' : 'bg-emerald-50 border-emerald-100 text-emerald-600 hover:bg-emerald-600 hover:text-white'}`}
-      >
-        💡 واش الفايدة منو؟
-      </button>
-    </div>
-  )}
-</div>
                     msg.role === 'user' 
                     ? (isDarkMode ? 'bg-[#27272a] text-blue-100 rounded-bl-none' : 'bg-blue-600 text-white rounded-bl-none') 
                     : (isDarkMode ? 'bg-[#18181b] border border-white/5 rounded-br-none' : 'bg-white border border-gray-100 rounded-br-none')
                   }`}>
+                    {/* نص الرسالة */}
                     <p className="text-sm md:text-base font-medium whitespace-pre-line leading-relaxed tracking-wide">
                       {msg.content}
                     </p>
-                    <div className={`mt-4 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-all`}>
+
+                    {/* الأزرار التفاعلية (تظهر فقط لآخر رد للمساعد) */}
+                    {msg.role === 'assistant' && i === chatMessages.length - 1 && (
+                      <div className="flex flex-wrap gap-2 mt-6 animate-in fade-in slide-in-from-bottom-3 duration-1000">
+                        <button 
+                          onClick={() => handleSendMessage("ديرلي تمرين خفيف على هاد الدرس")}
+                          className={`px-4 py-2 rounded-full text-[11px] font-black border transition-all active:scale-95 shadow-sm ${isDarkMode ? 'bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-600 hover:text-white' : 'bg-blue-50 border-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white'}`}
+                        >
+                          📝 اختبرني بتمرين
+                        </button>
+                        <button 
+                          onClick={() => handleSendMessage("زيد بسطلي هاد النقطة مافهمتهاش مليح")}
+                          className={`px-4 py-2 rounded-full text-[11px] font-black border transition-all active:scale-95 shadow-sm ${isDarkMode ? 'bg-purple-500/10 border-purple-500/20 text-purple-400 hover:bg-purple-600 hover:text-white' : 'bg-purple-50 border-purple-100 text-purple-600 hover:bg-purple-600 hover:text-white'}`}
+                        >
+                          🤔 زيد بسطلي أكتر
+                        </button>
+                        <button 
+                          onClick={() => handleSendMessage("واش هي الفائدة تاع هاد الدرس في حياتنا؟")}
+                          className={`px-4 py-2 rounded-full text-[11px] font-black border transition-all active:scale-95 shadow-sm ${isDarkMode ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-600 hover:text-white' : 'bg-emerald-50 border-emerald-100 text-emerald-600 hover:bg-emerald-600 hover:text-white'}`}
+                        >
+                          💡 واش الفايدة منو؟
+                        </button>
+                      </div>
+                    )}
+
+                    {/* معلومات إضافية (الوقت وزر النسخ) */}
+                    <div className="mt-4 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-all border-t border-white/5 pt-2">
                       <span className="text-[9px] font-black opacity-30 uppercase">{msg.timestamp}</span>
                       {msg.role === 'assistant' && (
-                        <button onClick={() => { navigator.clipboard.writeText(msg.content); showToast("تم نسخ الملخص ✅"); }} className="p-2 hover:bg-white/10 rounded-xl transition-all">
+                        <button 
+                          onClick={() => { navigator.clipboard.writeText(msg.content); showToast("تم نسخ الملخص ✅"); }} 
+                          className="p-2 hover:bg-white/10 rounded-xl transition-all"
+                        >
                           <Copy size={14} className="opacity-50 hover:opacity-100"/>
                         </button>
                       )}
@@ -403,7 +397,21 @@ export default function Mo5tasarApp() {
                   </div>
                 </div>
               ))}
-              
+
+              {isProcessing && (
+                <div className="flex gap-5 animate-pulse">
+                  <div className="w-10 h-10 rounded-2xl bg-gray-700 flex items-center justify-center shrink-0">
+                    <RefreshCw size={18} className="text-gray-500 animate-spin"/>
+                  </div>
+                  <div className="space-y-3 w-full max-w-md pt-2">
+                    <div className="h-4 bg-gray-700/50 rounded-full w-3/4"></div>
+                    <div className="h-4 bg-gray-700/50 rounded-full w-1/2"></div>
+                  </div>
+                </div>
+              )}
+              <div ref={chatEndRef} />
+            </div>
+          )} 
               {isProcessing && (
                 <div className="flex gap-5 animate-pulse">
                   <div className="w-10 h-10 rounded-2xl bg-gray-700 flex items-center justify-center shrink-0"><RefreshCw size={18} className="text-gray-500 animate-spin"/></div>
