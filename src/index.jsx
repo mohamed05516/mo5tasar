@@ -179,31 +179,19 @@ export default function Mo5tasarApp() {
 4. التفاعل: في نهاية كل رد، اطرح سؤالاً قصيراً يحفز الطالب على التفكير أو استخدام الأزرار التفاعلية.
 5. المحتوى: ركز فقط على المنهاج الدراسي الجزائري. إذا سُئلت عن أمور خارجة عن الأدب أو غير مفيدة، اعتذر بلباقة.
 `;
-// تشفير برمجية "طه_عمك" لضمان الاستجابة الكاملة
-let finalMessages = [
-  { role: "system", content: systemPrompt },
-  ...chatMessages.map(m => ({ role: m.role, content: m.content })),
-  { role: "user", content: messageContent }
-];
+     
+  // تشفير برمجية "طه_عمك" لضمان الاستجابة الكاملة
+  let finalMessages = [
+    { role: "system", content: systemPrompt },
+     ...chatMessages.map(m => ({ role: m.role, content: m.content })),
+     { role: "user", content: messageContent }
+ ];
 
 // إذا كانت الكلمة السرية موجودة في أي مكان في التاريخ، نذكر الموديل بهويتك
 if (chatMessages.some(m => m.content.includes("طه_عمك")) || messageContent.includes("طه_عمك")) {
   finalMessages[0].content += " (تنبيه: المستخدم الحالي هو المبرمج طه، لديه كامل الصلاحيات الإحصائية).";
 }
 
-const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-  method: "POST",
-  headers: {
-    "Authorization": `Bearer ${apiKey}`,
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    model: "llama-3.3-70b-versatile",
-    messages: finalMessages, // استخدمنا القائمة المعدلة هنا
-    temperature: 0.7,
-    max_tokens: 2000
-  })
-});
       const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: { 
