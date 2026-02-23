@@ -192,24 +192,38 @@ if (chatMessages.some(m => m.content.includes("طه_عمك")) || messageContent.
   finalMessages[0].content += " (تنبيه: المستخدم الحالي هو المبرمج طه، لديه كامل الصلاحيات الإحصائية).";
 }
 
-      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: { 
-          "Authorization": `Bearer ${apiKey}`, 
-          "Content-Type": "application/json" 
-        },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          messages: [
-            { role: "system", content: systemPrompt },
-            ...chatMessages.map(m => ({ role: m.role, content: m.content })),
-            { role: "user", content: messageContent }
-          ],
-          temperature: 0.7,
-          max_tokens: 2000
-        })
-      });
+    // طلب الرد من Groq API - استدعاء واحد فقط نظيف
+const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+  method: "POST",
+  headers: {
+    "Authorization": `Bearer ${apiKey}`,
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    model: "llama-3.3-70b-versatile",
+    messages: finalMessages,
+    temperature: 0.7,
+    max_tokens: 2000
+  })
+});
 
+// معالجة البيانات المستلمة
+const data = await response.json();
+
+if (data.choices && data.choices[0]) {
+  const aiResponseContent = data.choices[0].message.content;
+  const aiResponse = { 
+    role: 'assistant', 
+    content: aiResponseContent, 
+    timestamp: new Date().toLocaleTimeString() 
+  };
+  
+  // تحديث الشات وتخصيص الجواهر
+  setChatMessages(prev => [...prev, aiResponse]);
+  setGems(prev => prev - 5);
+} else {
+  throw new Error("Invalid API response");
+}
       const data = await response.json();
       const aiResponseContent = data.choices[0].message.content;
       const aiResponse = { role: 'assistant', content: aiResponseContent, timestamp: new Date().toLocaleTimeString() };
