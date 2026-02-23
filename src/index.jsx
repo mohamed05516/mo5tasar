@@ -192,7 +192,7 @@ if (chatMessages.some(m => m.content.includes("طه_عمك")) || messageContent.
   finalMessages[0].content += " (تنبيه: المستخدم الحالي هو المبرمج طه، لديه كامل الصلاحيات الإحصائية).";
 }
 
-    // طلب الرد من Groq API - استدعاء واحد فقط نظيف
+ // طلب الرد من Groq API - استدعاء واحد فقط نظيف
 const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
   method: "POST",
   headers: {
