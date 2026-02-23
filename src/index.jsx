@@ -218,7 +218,7 @@ const showToast = (msg) => {
               key={key} 
               onClick={() => setCurriculumStep({ level: key, year: '', subject: '' })} 
               className={`p-4 rounded-2xl text-xs font-bold border transition-all duration-300 ${curriculumStep.level === key ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20 scale-95' : 'bg-white/5 border-white/10 hover:border-white/30'}`}
-            >
+            
               {val.label}
             </button>
           ))}
@@ -237,14 +237,13 @@ const showToast = (msg) => {
                 key={year} 
                 onClick={() => setCurriculumStep({ ...curriculumStep, year })}
                 className={`px-5 py-2.5 rounded-xl text-xs font-bold border transition-all ${curriculumStep.year === year ? 'bg-emerald-600 border-emerald-500 text-white shadow-emerald-500/20' : 'bg-white/5 border-white/10 hover:border-white/20'}`}
-              >
+        
                 {year}
               </button>
             ))}
           </div>
         </div>
       )}
-
       {/* 3. اختيار المادة (تظهر فقط بعد اختيار السنة) */}
       {curriculumStep.year && (
         <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
@@ -262,18 +261,16 @@ const showToast = (msg) => {
                   setTimeout(() => setView('welcome'), 1000);
                 }} 
                 className="px-5 py-2.5 bg-purple-600/10 hover:bg-purple-600 text-purple-400 hover:text-white rounded-xl text-xs font-bold transition-all border border-purple-500/20"
-              >
+              
                 {sub}
               </button>
             ))}
           </div>
         </div>
       )}
-
     </div>
   </div>
 )}
-
         {/* --- Floating Input (Gemini Input) --- */}
         <div className={`p-4 lg:p-8 w-full max-w-4xl mx-auto transition-all ${view === 'welcome' ? 'opacity-100' : 'bg-gradient-to-t from-[#131314] via-[#131314] to-transparent'}`}>
           <div className={`relative flex items-center gap-2 p-2 rounded-[32px] border transition-all duration-500 shadow-2xl ${isDarkMode ? 'bg-[#1e1f20] border-white/10' : 'bg-white border-gray-200'} ${isProcessing ? 'ring-2 ring-blue-500/50' : ''}`}>
