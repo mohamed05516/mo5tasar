@@ -16,6 +16,9 @@ const curriculumData = {
 export default function Mo5tasarApp() {
   // --- States ---
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isDetailed, setIsDetailed] = useState(false); 
+  const [toast, setToast] = useState({ show: false, msg: '' }); 
+  const [selectedYear, setSelectedYear] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [chatMessages, setChatMessages] = useState([]); 
   const [inputText, setInputText] = useState('');
@@ -35,8 +38,12 @@ export default function Mo5tasarApp() {
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [chatMessages]);
 
   // --- Functions ---
-  const showToast = (msg) => alert(msg); // يمكن استبدالها بـ UI Toast لاحقاً
-
+const showToast = (msg) => {
+    setToast({ show: true, msg });
+    setTimeout(() => {
+      setToast({ show: false, msg: '' });
+    }, 3000);
+  };
   const handleNewChat = () => {
     setChatMessages([]);
     setView('welcome');
@@ -151,7 +158,7 @@ export default function Mo5tasarApp() {
           {view === 'welcome' && (
             <div className="h-full flex flex-col items-center justify-center max-w-3xl mx-auto text-center space-y-8 animate-in fade-in zoom-in-95 duration-500">
               <h1 className="text-4xl lg:text-6xl font-black bg-gradient-to-r from-[#4285f4] via-[#9b72f3] to-[#ea4335] bg-clip-text text-transparent pb-2">
-                مرحباً طه، واش نحضروا اليوم؟
+                وي العزيز، واش نحضروا اليوم؟
               </h1>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                 <div onClick={() => fileInputRef.current.click()} className={`p-6 rounded-2xl border transition-all cursor-pointer flex items-center gap-4 ${isDarkMode ? 'bg-[#1e1f20] border-white/5 hover:border-blue-500/50' : 'bg-white border-gray-200 hover:shadow-md'}`}>
@@ -189,32 +196,83 @@ export default function Mo5tasarApp() {
           )}
 
           {view === 'settings' && (
-            <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in">
-              <button onClick={() => setView('welcome')} className="flex items-center gap-2 text-sm opacity-50 hover:opacity-100"><ChevronLeft size={16}/> العودة</button>
-              <h2 className="text-2xl font-bold">الإعدادات والمنهاج</h2>
-              <div className={`p-6 rounded-[2.5rem] ${isDarkMode ? 'bg-[#1e1f20]' : 'bg-white shadow-xl'} space-y-6`}>
-                <div className="space-y-4">
-                  <label className="text-xs font-bold opacity-50">اختر الطور التعليمي</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {Object.entries(curriculumData).map(([key, val]) => (
-                      <button key={key} onClick={() => setCurriculumStep({ ...curriculumStep, level: key })} className={`p-3 rounded-2xl text-xs font-bold border transition-all ${curriculumStep.level === key ? 'bg-blue-600 border-blue-600 text-white' : 'border-white/10 hover:border-white/30'}`}>{val.label}</button>
-                    ))}
-                  </div>
-                </div>
-                {curriculumStep.level && (
-                  <div className="space-y-4 animate-in fade-in">
-                    <label className="text-xs font-bold opacity-50">المادة</label>
-                    <div className="flex flex-wrap gap-2">
-                      {curriculumData[curriculumStep.level].subjects.map(sub => (
-                        <button key={sub} onClick={() => { setCurriculumStep({ ...curriculumStep, subject: sub }); handleSendMessage(`لخص لي درس في مادة ${sub} لطور ${curriculumData[curriculumStep.level].label}`); }} className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-full text-xs transition-all border border-white/5">{sub}</button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+  <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-500">
+    <button onClick={() => setView('welcome')} className="flex items-center gap-2 text-sm opacity-50 hover:opacity-100 transition-all">
+      <ChevronLeft size={16}/> العودة للرئيسية
+    </button>
+    
+    <h2 className="text-2xl font-black italic flex items-center gap-3">
+      <Settings className="text-blue-500" /> ضبط المنهاج الجزائري
+    </h2>
+
+    <div className={`p-8 rounded-[2.5rem] ${isDarkMode ? 'bg-[#1e1f20] border border-white/5' : 'bg-white shadow-2xl'} space-y-8`}>
+      
+      {/* 1. اختيار الطور */}
+      <div className="space-y-4">
+        <label className="text-[10px] font-black uppercase tracking-widest opacity-40 flex items-center gap-2">
+          <div className="w-1 h-1 bg-blue-500 rounded-full"></div> 1. الطور التعليمي
+        </label>
+        <div className="grid grid-cols-3 gap-3">
+          {Object.entries(curriculumData).map(([key, val]) => (
+            <button 
+              key={key} 
+              onClick={() => setCurriculumStep({ level: key, year: '', subject: '' })} 
+              className={`p-4 rounded-2xl text-xs font-bold border transition-all duration-300 ${curriculumStep.level === key ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20 scale-95' : 'bg-white/5 border-white/10 hover:border-white/30'}`}
+            >
+              {val.label}
+            </button>
+          ))}
         </div>
+      </div>
+
+      {/* 2. اختيار السنة (تظهر فقط بعد اختيار الطور) */}
+      {curriculumStep.level && (
+        <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
+          <label className="text-[10px] font-black uppercase tracking-widest opacity-40 flex items-center gap-2">
+            <div className="w-1 h-1 bg-emerald-500 rounded-full"></div> 2. السنة الدراسية
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {curriculumData[curriculumStep.level].years.map(year => (
+              <button 
+                key={year} 
+                onClick={() => setCurriculumStep({ ...curriculumStep, year })}
+                className={`px-5 py-2.5 rounded-xl text-xs font-bold border transition-all ${curriculumStep.year === year ? 'bg-emerald-600 border-emerald-500 text-white shadow-emerald-500/20' : 'bg-white/5 border-white/10 hover:border-white/20'}`}
+              >
+                {year}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 3. اختيار المادة (تظهر فقط بعد اختيار السنة) */}
+      {curriculumStep.year && (
+        <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
+          <label className="text-[10px] font-black uppercase tracking-widest opacity-40 flex items-center gap-2">
+            <div className="w-1 h-1 bg-purple-500 rounded-full"></div> 3. المادة المراد تلخيصها
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {curriculumData[curriculumStep.level].subjects.map(sub => (
+              <button 
+                key={sub} 
+                onClick={() => {
+                  setCurriculumStep({ ...curriculumStep, subject: sub });
+                  showToast(`تم ضبط المنهاج: ${curriculumStep.year} - ${sub}`);
+                  // توجيه المستخدم للشات تلقائياً لبدء العمل
+                  setTimeout(() => setView('welcome'), 1000);
+                }} 
+                className="px-5 py-2.5 bg-purple-600/10 hover:bg-purple-600 text-purple-400 hover:text-white rounded-xl text-xs font-bold transition-all border border-purple-500/20"
+              >
+                {sub}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+    </div>
+  </div>
+)}
 
         {/* --- Floating Input (Gemini Input) --- */}
         <div className={`p-4 lg:p-8 w-full max-w-4xl mx-auto transition-all ${view === 'welcome' ? 'opacity-100' : 'bg-gradient-to-t from-[#131314] via-[#131314] to-transparent'}`}>
@@ -237,8 +295,23 @@ export default function Mo5tasarApp() {
             </button>
             <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={processImage} />
           </div>
-          <p className="text-[10px] text-center mt-3 opacity-30">قد يخطئ مختصر أحياناً، يرجى التحقق من المعلومات المهمة.</p>
+         <p className="text-[10px] text-center mt-3 opacity-30">.قد يخطئ أحياناً، يرجى التحقق من المعلومات المهمة Mo5tasar</p>
         </div>
+        {toast.show && (
+          <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-5 duration-300">
+            <div className={`
+              flex items-center gap-3 px-6 py-3 rounded-2xl shadow-2xl border
+              ${isDarkMode 
+                ? 'bg-[#1e1f20] border-blue-500/30 text-blue-400' 
+                : 'bg-white border-blue-100 text-blue-600'}
+            `}>
+              <div className="bg-blue-500/10 p-1.5 rounded-lg">
+                <Zap size={16} className="animate-pulse" />
+              </div>
+              <span className="text-sm font-bold tracking-wide">{toast.msg}</span>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
