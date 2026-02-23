@@ -330,7 +330,7 @@ export default function Mo5tasarApp() {
             </div>
           )}
 
-        {/* VIEW: CHAT SCREEN */}
+       {/* VIEW: CHAT SCREEN */}
           {view === 'chat' && (
             <div className="max-w-4xl mx-auto space-y-10 pb-32 animate-in slide-in-from-bottom-6 duration-500">
               {chatMessages.length === 0 && (
@@ -398,6 +398,20 @@ export default function Mo5tasarApp() {
                 </div>
               ))}
 
+              {isProcessing && (
+                <div className="flex gap-5 animate-pulse">
+                  <div className="w-10 h-10 rounded-2xl bg-gray-700 flex items-center justify-center shrink-0">
+                    <RefreshCw size={18} className="text-gray-500 animate-spin"/>
+                  </div>
+                  <div className="space-y-3 w-full max-w-md pt-2">
+                    <div className="h-4 bg-gray-700/50 rounded-full w-3/4"></div>
+                    <div className="h-4 bg-gray-700/50 rounded-full w-1/2"></div>
+                  </div>
+                </div>
+              )}
+              <div ref={chatEndRef} />
+            </div>
+          )}
               {isProcessing && (
                 <div className="flex gap-5 animate-pulse">
                   <div className="w-10 h-10 rounded-2xl bg-gray-700 flex items-center justify-center shrink-0">
