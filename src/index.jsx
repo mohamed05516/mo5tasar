@@ -6,6 +6,19 @@ import {
  BookOpen, ChevronLeft, Layout, Zap, Lightbulb, 
  CheckCircle2, AlertCircle, RefreshCw
 } from 'lucide-react';
+import { supabase } from './supabaseClient';
+
+// كود بسيط للتأكد من الاتصال
+const testConnection = async () => {
+    const { data, error } = await supabase.from('curriculum_docs').select('count');
+    if (error) {
+        console.log("خطأ في الاتصال:", error.message);
+    } else {
+        console.log("تم الاتصال بسوبابايس بنجاح!");
+    }
+};
+
+testConnection();
 
 // --- البيانات الأساسية للمنهاج ---
 const curriculumData = {
